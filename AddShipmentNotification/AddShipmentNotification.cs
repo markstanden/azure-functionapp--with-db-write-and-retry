@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace interview
@@ -19,9 +20,15 @@ namespace interview
         private const string WebHookUrl =
             "https://webhook.site/ed4785fc-49db-4c2c-a40f-ceb775e72d96";
 
-        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly string _dbName;
 
+        private readonly HttpClient _httpClient;
         private readonly ILogger<AddShipmentNotification> _logger;
+        private readonly string _shipmentLinesTableName;
+        private readonly string _shipmentTableName;
+
+        private readonly string _sqlConnectionString;
 
         /// <summary>
         /// Function constructor, used for Dependency Injection
@@ -30,11 +37,18 @@ namespace interview
         /// <param name="httpClient"></param>
         public AddShipmentNotification(
             ILogger<AddShipmentNotification> logger,
+            IConfiguration configuration,
             HttpClient httpClient
         )
         {
             _logger = logger;
+            _configuration = configuration;
             _httpClient = httpClient;
+
+            _dbName = configuration.GetValue<string>("dbName");
+            _shipmentTableName = configuration.GetValue<string>("shipmentTableName");
+            _shipmentLinesTableName = configuration.GetValue<string>("shipmentLinesTableName");
+            _sqlConnectionString = configuration.GetValue<string>("sqlConnectionString");
         }
 
         [Function(nameof(AddShipmentNotification))]
@@ -44,6 +58,11 @@ namespace interview
             ServiceBusMessageActions messageActions
         )
         {
+            _logger.LogInformation(_dbName);
+            _logger.LogInformation(_shipmentTableName);
+            _logger.LogInformation(_shipmentLinesTableName);
+            _logger.LogInformation(_sqlConnectionString);
+
             // Parse servicebus message JSON into ShipmentNotification instance
             ShipmentNotification? notification = ParseMessageJson(message);
 
@@ -128,10 +147,7 @@ namespace interview
             );
 
             // Creates a sql connection class to add the notification to the DB
-            var sql = new SqlDbService<AddShipmentNotification>(
-                GetEnvironmentVariable("SqlConnectionString") ?? "SqlConnectionString NOT SET",
-                _logger
-            );
+            var sql = new SqlDbService<AddShipmentNotification>(_sqlConnectionString, _logger);
 
             // Makes the connection and adds the notification
             var result = await sql.WriteNotification(notification, new Sanitation.Sanitation());
@@ -163,18 +179,6 @@ namespace interview
         private async Task SendSuccessMessage(string query, string message, string url = WebHookUrl)
         {
             await _httpClient.GetAsync($"{url}?{query}={message}");
-        }
-
-        /// <summary>
-        /// Gets environment variables at runtime
-        /// courtesy of MS
-        /// https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-csharp?tabs=functionsv2%2Cfixed-delay%2Cazure-cli#environment-variables
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static string? GetEnvironmentVariable(string name)
-        {
-            return Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
         }
     }
 }
