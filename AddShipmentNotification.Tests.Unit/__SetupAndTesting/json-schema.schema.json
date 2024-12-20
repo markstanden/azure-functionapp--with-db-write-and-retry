@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "",
+  "title": "AddShipmentNotification",
+  "description": "Adds a shipment notification receipt",
+  "type": "object",
+  "properties": {
+    "shipmentId": {
+      "description": "The unique identifier for a shipment notification",
+      "type": "string"
+    },
+    "shipmentDate": {
+      "description": "Date of the shipment notification",
+      "type": "string"
+    },
+    "shipmentLines": {
+      "description": "The product lines within the shipment",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sku": {
+            "description": "The unique ID for the product",
+            "type": "string"
+          },
+          "quantity" : {
+            "description": "The quantity of the product in the shipment",
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [ "sku", "quantity" ]
+      }
+    }
+  },
+  "required": [ "shipmentId", "shipmentDate", "shipmentLines" ]
+}
+

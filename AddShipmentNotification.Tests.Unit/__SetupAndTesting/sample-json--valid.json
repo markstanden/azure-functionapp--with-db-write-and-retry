@@ -1,0 +1,26 @@
+{
+  "shipmentId": "MarkTest-2024-12-20-2000-WithSanitation",
+  "shipmentDate": "2024-12-20T20:00:00Z",
+  "shipmentLines": [
+    {
+      "sku": "SKU001",
+      "quantity": 11
+    },
+    {
+      "sku": "SKU002",
+      "quantity": 12
+    },
+    {
+      "sku": "SKU003",
+      "quantity": 13
+    },
+    {
+      "sku": "SKU004",
+      "quantity": 14
+    },
+    {
+      "sku": "SKU005",
+      "quantity": 15
+    }
+  ]
+}
