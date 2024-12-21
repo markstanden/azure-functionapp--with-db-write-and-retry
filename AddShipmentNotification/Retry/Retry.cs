@@ -4,17 +4,19 @@ public class Retry : IRetry
 {
     public int MaxRetries { get; init; } = 3;
 
-    public bool Attempt(Func<bool> fn)
+    public bool Attempt(Func<bool> fn, int attempt = 1)
     {
         if (fn())
         {
             return true;
         }
-        else if (fn())
+
+        if (attempt >= MaxRetries)
         {
-            return true;
+            return false;
         }
-        else
-            return fn();
+
+        // Recursively call with an incremented attempt number
+        return Attempt(fn, attempt + 1);
     }
 }
