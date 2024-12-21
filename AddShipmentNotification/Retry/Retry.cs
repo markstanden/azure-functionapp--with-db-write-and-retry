@@ -6,6 +6,11 @@ public class Retry : IRetry
 
     public bool Attempt(Func<bool> fn)
     {
-        return fn();
+        if (fn())
+        {
+            return true;
+        }
+        else
+            return fn();
     }
 }
