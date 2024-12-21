@@ -6,6 +6,6 @@ public class Retry : IRetry
 
     public bool Attempt(Func<bool> fn)
     {
-        throw new NotImplementedException();
+        return fn();
     }
 }
