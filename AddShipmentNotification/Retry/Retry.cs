@@ -10,6 +10,10 @@ public class Retry : IRetry
         {
             return true;
         }
+        else if (fn())
+        {
+            return true;
+        }
         else
             return fn();
     }
