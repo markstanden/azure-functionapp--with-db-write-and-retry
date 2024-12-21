@@ -1,15 +1,16 @@
+using interview.Retry;
 using JetBrains.Annotations;
 using Moq;
 
-namespace AddShipmentNotification.Tests.Unit.Retry;
+namespace AddShipmentNotification.Tests.Unit.RetryTest;
 
-[TestSubject(typeof(interview.Retry.Retry))]
+[TestSubject(typeof(Retry))]
 public class RetryTest
 {
     [Fact]
-    public void Attempt_WithFunctionReturningTrue_LoopsOnceRetunsTrue()
+    public void Attempt_WithFunctionReturningTrue_LoopsOnceReturnsTrue()
     {
-        IRetry retry = new interview.Retry.Retry() { MaxRetries = 3 };
+        IRetry retry = new Retry() { MaxRetries = 3 };
         var returnsTrue = new Mock<Func<bool>>();
         returnsTrue.Setup(f => f()).Returns(true);
 
@@ -22,7 +23,7 @@ public class RetryTest
     [Fact]
     public void Attempt_WithFunctionReturningFalseTrue_LoopsTwiceReturnsTrue()
     {
-        IRetry retry = new interview.Retry.Retry() { MaxRetries = 3 };
+        IRetry retry = new Retry() { MaxRetries = 3 };
         var returnsTrue = new Mock<Func<bool>>();
         returnsTrue.SetupSequence(f => f()).Returns(false).Returns(true);
 
@@ -35,7 +36,7 @@ public class RetryTest
     [Fact]
     public void Attempt_WithFunctionReturningFalseFalseTrue_LoopsThreeTimesReturnsTrue()
     {
-        IRetry retry = new interview.Retry.Retry() { MaxRetries = 3 };
+        IRetry retry = new Retry() { MaxRetries = 3 };
         var returnsTrue = new Mock<Func<bool>>();
         returnsTrue.SetupSequence(f => f()).Returns(false).Returns(false).Returns(true);
 
@@ -48,7 +49,7 @@ public class RetryTest
     [Fact]
     public void Attempt_WithFunctionReturningFalseFalseFalse_LoopsThreeTimesReturnsFalse()
     {
-        IRetry retry = new interview.Retry.Retry() { MaxRetries = 3 };
+        IRetry retry = new Retry() { MaxRetries = 3 };
         var returnsTrue = new Mock<Func<bool>>();
         returnsTrue.SetupSequence(f => f()).Returns(false).Returns(false).Returns(false);
 
@@ -61,7 +62,7 @@ public class RetryTest
     [Fact]
     public void Attempt_WithTwoMaxRetries_LoopsTwiceReturnsFalse()
     {
-        IRetry retry = new interview.Retry.Retry() { MaxRetries = 2 };
+        IRetry retry = new Retry() { MaxRetries = 2 };
         var returnsTrue = new Mock<Func<bool>>();
         returnsTrue.SetupSequence(f => f()).Returns(false).Returns(false);
 
