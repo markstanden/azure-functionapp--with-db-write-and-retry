@@ -11,6 +11,7 @@ public class RetryTest
     {
         IRetry retry = new interview.Retry.Retry() { MaxRetries = 3 };
         var returnsTrue = new Mock<Func<bool>>();
+        returnsTrue.Setup(f => f()).Returns(true);
 
         var result = retry.Attempt(returnsTrue.Object);
 
