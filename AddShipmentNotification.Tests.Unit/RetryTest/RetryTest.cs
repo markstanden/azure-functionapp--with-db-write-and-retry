@@ -71,4 +71,25 @@ public class RetryTest
         Assert.False(result);
         returnsTrue.Verify(x => x(), Times.Exactly(2));
     }
+
+    [Fact]
+    public void Attempt_WithFunctionReturningFalseTrue_CallsDelayFunctionOnce()
+    {
+        var delayFn = new Mock<Action<TimeSpan>>();
+
+        IRetry retry = new Retry()
+        {
+            MaxRetries = 3,
+            DelaySeconds = 10,
+            DelayFn = delayFn.Object,
+        };
+        var returnsTrue = new Mock<Func<bool>>();
+        returnsTrue.SetupSequence(f => f()).Returns(false).Returns(true);
+
+        var result = retry.Attempt(returnsTrue.Object);
+
+        Assert.True(result);
+        delayFn.Verify(x => x(TimeSpan.FromSeconds(10)), Times.Exactly(1));
+        returnsTrue.Verify(x => x(), Times.Exactly(2));
+    }
 }
