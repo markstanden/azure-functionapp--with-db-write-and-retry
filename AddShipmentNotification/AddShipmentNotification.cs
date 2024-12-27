@@ -44,6 +44,7 @@ namespace interview
             IConfiguration configuration,
             IRetry retryFn,
             ISanitation sanitation,
+            ISqlDbService sqlDbService,
             HttpClient httpClient
         )
         {
@@ -51,12 +52,8 @@ namespace interview
             _configuration = configuration;
             _retryFn = retryFn;
             _sanitation = sanitation;
+            _sqlDbService = sqlDbService;
             _httpClient = httpClient;
-
-            _dbName = configuration.GetValue<string>("dbName");
-            _shipmentTableName = configuration.GetValue<string>("shipmentTableName");
-            _shipmentLinesTableName = configuration.GetValue<string>("shipmentLinesTableName");
-            _sqlConnectionString = configuration.GetValue<string>("sqlConnectionString");
         }
 
         [Function(nameof(AddShipmentNotification))]
@@ -66,11 +63,6 @@ namespace interview
             ServiceBusMessageActions messageActions
         )
         {
-            _logger.LogInformation(_dbName);
-            _logger.LogInformation(_shipmentTableName);
-            _logger.LogInformation(_shipmentLinesTableName);
-            _logger.LogInformation(_sqlConnectionString);
-
             // Parse servicebus message JSON into ShipmentNotification instance
             ShipmentNotification? notification = ParseMessageJson(message);
 
@@ -85,11 +77,11 @@ namespace interview
                 return;
             }
 
-            // Creates a sql connection class to add the notification to the DB
-            var sql = new SqlDbService<AddShipmentNotification>(_sqlConnectionString, _logger);
-
+            // Call the retry function and pass the method to add the notification to the DB to it
+            // The retry function attempts to do the write 3 times (by default) with a 10 second delay between attempts (default)
+            // returns true if successful, false if unsuccessful
             bool result = await _retryFn.Attempt(
-                () => sql.WriteNotification(notification, _sanitation)
+                () => _sqlDbService.WriteNotification(notification, _sanitation)
             );
 
             if (!result)

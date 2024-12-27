@@ -1,7 +1,8 @@
-using interview;
 using interview.Sanitation;
 
-public interface ISqlDbService<T>
+namespace interview.SqlDbService;
+
+public interface ISqlDbService
 {
     public Task<bool> WriteNotification(ShipmentNotification notification, ISanitation sanitation);
 }

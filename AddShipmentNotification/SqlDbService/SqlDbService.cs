@@ -4,20 +4,20 @@ using Microsoft.Extensions.Logging;
 
 namespace interview.SqlDbService;
 
-public class SqlDbService<T> : ISqlDbService<T>
+public class SqlDbService : ISqlDbService
 {
     private readonly string _connectionString;
     private readonly string _dbName;
     private readonly string _dbShipmentLinesTableName;
     private readonly string _dbShipmentTableName;
-    private readonly ILogger<T> _logger;
+    private readonly ILogger<SqlDbService> _logger;
 
     public SqlDbService(
         string connectionString,
-        ILogger<T> logger,
-        string dbName = "dbo",
-        string dbShipmentTableName = "markShipment",
-        string dbShipmentLinesTableName = "markShipment_Line"
+        ILogger<SqlDbService> logger,
+        string? dbName = "dbo",
+        string? dbShipmentTableName = "markShipment",
+        string? dbShipmentLinesTableName = "markShipment_Line"
     )
     {
         _connectionString = connectionString;
