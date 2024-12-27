@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using interview.Sanitation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ namespace interview
         private readonly ILogger<AddShipmentNotification> _logger;
 
         private readonly IRetry _retryFn;
+        private readonly ISanitation _sanitation;
         private readonly string _shipmentLinesTableName;
         private readonly string _shipmentTableName;
 
@@ -40,12 +42,14 @@ namespace interview
             ILogger<AddShipmentNotification> logger,
             IConfiguration configuration,
             IRetry retryFn,
+            ISanitation sanitation,
             HttpClient httpClient
         )
         {
             _logger = logger;
             _configuration = configuration;
             _retryFn = retryFn;
+            _sanitation = sanitation;
             _httpClient = httpClient;
 
             _dbName = configuration.GetValue<string>("dbName");
@@ -84,7 +88,7 @@ namespace interview
             var sql = new SqlDbService<AddShipmentNotification>(_sqlConnectionString, _logger);
 
             bool result = await _retryFn.Attempt(
-                () => sql.WriteNotification(notification, new Sanitation.Sanitation())
+                () => sql.WriteNotification(notification, _sanitation)
             );
 
             if (!result)

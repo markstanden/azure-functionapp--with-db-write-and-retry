@@ -1,4 +1,5 @@
 using interview.Retry;
+using interview.Sanitation;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,5 +16,6 @@ builder.ConfigureFunctionsWebApplication();
 // Adds Http Client as a DI Constructor parameter
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IRetry>(new Retry());
+builder.Services.AddSingleton<ISanitation>(new Sanitation());
 
 builder.Build().Run();

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using interview.Retry;
+using interview.Sanitation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -13,13 +15,17 @@ public class AddShipmentNotificationTests
     private readonly Mock<IConfiguration> _mockConfig;
     private readonly Mock<HttpClient> _mockHttp;
     private readonly Mock<ILogger<interview.AddShipmentNotification>> _mockLog;
+    private readonly IRetry _testRetry;
+    private readonly ISanitation _testSanitation;
 
     public AddShipmentNotificationTests()
     {
         _mockLog = new Mock<ILogger<interview.AddShipmentNotification>>();
         _mockConfig = new Mock<IConfiguration>();
-        _mockActions = new Mock<ServiceBusMessageActions>();
+        _testRetry = new Retry();
+        _testSanitation = new Sanitation();
         _mockHttp = new Mock<HttpClient>();
+        _mockActions = new Mock<ServiceBusMessageActions>();
     }
 
     [Fact(Skip = "Awaiting DI implementation of SqlDbService")]
@@ -39,6 +45,8 @@ public class AddShipmentNotificationTests
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _mockConfig.Object,
+            _testRetry,
+            _testSanitation,
             _mockHttp.Object
         );
         var result = sut.Run(stubMessage, _mockActions.Object);
@@ -73,6 +81,8 @@ public class AddShipmentNotificationTests
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _mockConfig.Object,
+            _testRetry,
+            _testSanitation,
             _mockHttp.Object
         );
         var result = sut.Run(stubMessage, _mockActions.Object);
@@ -103,6 +113,8 @@ public class AddShipmentNotificationTests
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _mockConfig.Object,
+            _testRetry,
+            _testSanitation,
             _mockHttp.Object
         );
         var result = sut.Run(stubMessage, _mockActions.Object);
@@ -136,6 +148,8 @@ public class AddShipmentNotificationTests
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _mockConfig.Object,
+            _testRetry,
+            _testSanitation,
             _mockHttp.Object
         );
         var result = sut.Run(stubMessage, _mockActions.Object);
