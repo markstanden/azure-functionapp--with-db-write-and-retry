@@ -1,3 +1,4 @@
+using AddShipmentNotification.Tests.Unit.FakeRetryFn;
 using interview.Retry;
 using JetBrains.Annotations;
 using Moq;
@@ -126,23 +127,5 @@ public class RetryTest
         await retry.Attempt(fakeRetryFn.RetryTask);
 
         delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(2));
-    }
-
-    public class FakeRetryTaskFn
-    {
-        private FakeRetryTaskFn(int expectedAttemptCount)
-        {
-            RetryTask = () =>
-            {
-                AttemptCount++;
-                return Task.FromResult(AttemptCount == expectedAttemptCount);
-            };
-        }
-
-        public int AttemptCount { get; private set; }
-        public Func<Task<bool>> RetryTask { get; }
-
-        public static FakeRetryTaskFn CreateSuccessOn(int attemptNumber) =>
-            new FakeRetryTaskFn(attemptNumber);
     }
 }
