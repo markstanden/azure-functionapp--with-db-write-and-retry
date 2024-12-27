@@ -13,7 +13,7 @@ public class RetryTest
     private const int ThirdAttempt = 3;
     private const int FourthAttempt = 4;
 
-    public Mock<Func<TimeSpan, Task>> CreateMockDelayFn()
+    private Mock<Func<TimeSpan, Task>> CreateMockDelayFn()
     {
         return new Mock<Func<TimeSpan, Task>>();
     }
