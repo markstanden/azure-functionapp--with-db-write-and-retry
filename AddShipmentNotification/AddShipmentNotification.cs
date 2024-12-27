@@ -22,9 +22,10 @@ namespace interview
 
         private readonly IConfiguration _configuration;
         private readonly string _dbName;
-
         private readonly HttpClient _httpClient;
         private readonly ILogger<AddShipmentNotification> _logger;
+
+        private readonly IRetry _retryFn;
         private readonly string _shipmentLinesTableName;
         private readonly string _shipmentTableName;
 
@@ -38,11 +39,13 @@ namespace interview
         public AddShipmentNotification(
             ILogger<AddShipmentNotification> logger,
             IConfiguration configuration,
+            IRetry retryFn,
             HttpClient httpClient
         )
         {
             _logger = logger;
             _configuration = configuration;
+            _retryFn = retryFn;
             _httpClient = httpClient;
 
             _dbName = configuration.GetValue<string>("dbName");
@@ -80,8 +83,7 @@ namespace interview
             // Creates a sql connection class to add the notification to the DB
             var sql = new SqlDbService<AddShipmentNotification>(_sqlConnectionString, _logger);
 
-            var retry = new Retry.Retry();
-            bool result = await retry.Attempt(
+            bool result = await _retryFn.Attempt(
                 () => sql.WriteNotification(notification, new Sanitation.Sanitation())
             );
 
