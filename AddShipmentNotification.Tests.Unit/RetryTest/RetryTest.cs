@@ -7,6 +7,11 @@ namespace AddShipmentNotification.Tests.Unit.RetryTest;
 [TestSubject(typeof(Retry))]
 public class RetryTest
 {
+    private const int FIRST_ATTEMPT = 1;
+    private const int SECOND_ATTEMPT = 2;
+    private const int THIRD_ATTEMPT = 3;
+    private const int FOURTH_ATTEMPT = 4;
+
     public Mock<Func<TimeSpan, Task>> CreateMockDelayFn()
     {
         return new Mock<Func<TimeSpan, Task>>();
@@ -15,87 +20,129 @@ public class RetryTest
     [Fact]
     public async Task Attempt_WithFunctionReturningTrue_LoopsOnceReturnsTrue()
     {
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FIRST_ATTEMPT);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
-        var returnsTrue = new Mock<Func<bool>>();
-        returnsTrue.Setup(f => f()).Returns(true);
 
-        var result = await retry.Attempt(returnsTrue.Object);
+        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
+        Assert.Equal(1, fakeRetryTaskFn.AttemptCount);
         Assert.True(result);
-        returnsTrue.Verify(x => x(), Times.Once);
     }
 
     [Fact]
     public async Task Attempt_WithFunctionReturningFalseTrue_LoopsTwiceReturnsTrue()
     {
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(SECOND_ATTEMPT);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
-        var returnsFalseTrue = new Mock<Func<bool>>();
-        returnsFalseTrue.SetupSequence(f => f()).Returns(false).Returns(true);
 
-        var result = await retry.Attempt(returnsFalseTrue.Object);
+        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
+        Assert.Equal(2, fakeRetryTaskFn.AttemptCount);
         Assert.True(result);
-        returnsFalseTrue.Verify(x => x(), Times.Exactly(2));
     }
 
     [Fact]
     public async Task Attempt_WithFunctionReturningFalseFalseTrue_LoopsThreeTimesReturnsTrue()
     {
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(THIRD_ATTEMPT);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
-        var returnsFalseFalseTrue = new Mock<Func<bool>>();
-        returnsFalseFalseTrue.SetupSequence(f => f()).Returns(false).Returns(false).Returns(true);
 
-        var result = await retry.Attempt(returnsFalseFalseTrue.Object);
+        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
+        Assert.Equal(3, fakeRetryTaskFn.AttemptCount);
         Assert.True(result);
-        returnsFalseFalseTrue.Verify(x => x(), Times.Exactly(3));
     }
 
     [Fact]
     public async Task Attempt_WithFunctionReturningFalseFalseFalse_LoopsThreeTimesReturnsFalse()
     {
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FOURTH_ATTEMPT);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
 
-        var returnsFalseFalseFalse = new Mock<Func<bool>>();
-        returnsFalseFalseFalse.SetupSequence(f => f()).Returns(false).Returns(false).Returns(false);
+        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
-        var result = await retry.Attempt(returnsFalseFalseFalse.Object);
-
+        Assert.Equal(3, fakeRetryTaskFn.AttemptCount);
         Assert.False(result);
-        returnsFalseFalseFalse.Verify(x => x(), Times.Exactly(3));
     }
 
     [Fact]
     public async Task Attempt_WithTwoMaxRetries_LoopsTwiceReturnsFalse()
     {
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(THIRD_ATTEMPT);
         IRetry retry = new Retry() { MaxRetries = 2, DelaySeconds = 0 };
 
-        var returnsFalseFalse = new Mock<Func<bool>>();
-        returnsFalseFalse.SetupSequence(f => f()).Returns(false).Returns(false);
+        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
-        var result = await retry.Attempt(returnsFalseFalse.Object);
-
+        Assert.Equal(2, fakeRetryTaskFn.AttemptCount);
         Assert.False(result);
-        returnsFalseFalse.Verify(x => x(), Times.Exactly(2));
     }
 
     [Fact]
-    public async Task Attempt_WithFunctionReturningFalseTrue_CallsDelayFunctionOnce()
+    public async Task Attempt_WithFunctionReturningTrue_DoesNotCallsDelayFunction()
     {
         var delayFnMock = CreateMockDelayFn();
+        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(FIRST_ATTEMPT);
         IRetry retry = new Retry()
         {
             MaxRetries = 3,
             DelaySeconds = 0,
             DelayFn = delayFnMock.Object,
         };
-        var returnsFalseTrue = new Mock<Func<bool>>();
-        returnsFalseTrue.SetupSequence(f => f()).Returns(false).Returns(true);
 
-        var result = await retry.Attempt(returnsFalseTrue.Object);
+        await retry.Attempt(fakeRetryFn.RetryTask);
 
-        Assert.True(result);
+        delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(0));
+    }
+
+    [Fact]
+    public async Task Attempt_WithFunctionReturningFalseTrue_CallsDelayFunctionOnce()
+    {
+        var delayFnMock = CreateMockDelayFn();
+        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(SECOND_ATTEMPT);
+        IRetry retry = new Retry()
+        {
+            MaxRetries = 3,
+            DelaySeconds = 0,
+            DelayFn = delayFnMock.Object,
+        };
+
+        await retry.Attempt(fakeRetryFn.RetryTask);
+
         delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(1));
-        returnsFalseTrue.Verify(x => x(), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task Attempt_WithFunctionReturningFalseFalseTrue_CallsDelayFunctionOnce()
+    {
+        var delayFnMock = CreateMockDelayFn();
+        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(THIRD_ATTEMPT);
+        IRetry retry = new Retry()
+        {
+            MaxRetries = 3,
+            DelaySeconds = 0,
+            DelayFn = delayFnMock.Object,
+        };
+
+        await retry.Attempt(fakeRetryFn.RetryTask);
+
+        delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(2));
+    }
+
+    public class FakeRetryTaskFn
+    {
+        private FakeRetryTaskFn(int expectedAttemptCount)
+        {
+            RetryTask = () =>
+            {
+                AttemptCount++;
+                return Task.FromResult(AttemptCount == expectedAttemptCount);
+            };
+        }
+
+        public int AttemptCount { get; private set; }
+        public Func<Task<bool>> RetryTask { get; }
+
+        public static FakeRetryTaskFn CreateSuccessOn(int attemptNumber) =>
+            new FakeRetryTaskFn(attemptNumber);
     }
 }

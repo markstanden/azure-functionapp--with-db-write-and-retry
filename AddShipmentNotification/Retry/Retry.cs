@@ -9,9 +9,9 @@ public class Retry : IRetry
 
     public int MaxRetries { get; init; } = 3;
 
-    public async Task<bool> Attempt(Func<bool> fn, int attempt = 1)
+    public async Task<bool> Attempt(Func<Task<bool>> fnAsync, int attempt = 1)
     {
-        if (fn())
+        if (await fnAsync())
         {
             return true;
         }
@@ -24,6 +24,6 @@ public class Retry : IRetry
         await DelayFn(TimeSpan.FromSeconds(DelaySeconds));
 
         // Recursively call with an incremented attempt number
-        return await Attempt(fn, attempt + 1);
+        return await Attempt(fnAsync, attempt + 1);
     }
 }
