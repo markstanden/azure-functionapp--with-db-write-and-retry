@@ -8,10 +8,10 @@ namespace AddShipmentNotification.Tests.Unit.RetryTest;
 [TestSubject(typeof(Retry))]
 public class RetryTest
 {
-    private const int FIRST_ATTEMPT = 1;
-    private const int SECOND_ATTEMPT = 2;
-    private const int THIRD_ATTEMPT = 3;
-    private const int FOURTH_ATTEMPT = 4;
+    private const int FirstAttempt = 1;
+    private const int SecondAttempt = 2;
+    private const int ThirdAttempt = 3;
+    private const int FourthAttempt = 4;
 
     public Mock<Func<TimeSpan, Task>> CreateMockDelayFn()
     {
@@ -21,7 +21,7 @@ public class RetryTest
     [Fact]
     public async Task Attempt_WithFunctionReturningTrue_LoopsOnceReturnsTrue()
     {
-        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FIRST_ATTEMPT);
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FirstAttempt);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
 
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
@@ -33,7 +33,7 @@ public class RetryTest
     [Fact]
     public async Task Attempt_WithFunctionReturningFalseTrue_LoopsTwiceReturnsTrue()
     {
-        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(SECOND_ATTEMPT);
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(SecondAttempt);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
 
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
@@ -45,7 +45,7 @@ public class RetryTest
     [Fact]
     public async Task Attempt_WithFunctionReturningFalseFalseTrue_LoopsThreeTimesReturnsTrue()
     {
-        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(THIRD_ATTEMPT);
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(ThirdAttempt);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
 
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
@@ -57,7 +57,7 @@ public class RetryTest
     [Fact]
     public async Task Attempt_WithFunctionReturningFalseFalseFalse_LoopsThreeTimesReturnsFalse()
     {
-        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FOURTH_ATTEMPT);
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FourthAttempt);
         IRetry retry = new Retry() { MaxRetries = 3, DelaySeconds = 0 };
 
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
@@ -69,7 +69,7 @@ public class RetryTest
     [Fact]
     public async Task Attempt_WithTwoMaxRetries_LoopsTwiceReturnsFalse()
     {
-        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(THIRD_ATTEMPT);
+        var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(ThirdAttempt);
         IRetry retry = new Retry() { MaxRetries = 2, DelaySeconds = 0 };
 
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
@@ -82,7 +82,7 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningTrue_DoesNotCallsDelayFunction()
     {
         var delayFnMock = CreateMockDelayFn();
-        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(FIRST_ATTEMPT);
+        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(FirstAttempt);
         IRetry retry = new Retry()
         {
             MaxRetries = 3,
@@ -99,7 +99,7 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningFalseTrue_CallsDelayFunctionOnce()
     {
         var delayFnMock = CreateMockDelayFn();
-        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(SECOND_ATTEMPT);
+        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(SecondAttempt);
         IRetry retry = new Retry()
         {
             MaxRetries = 3,
@@ -116,7 +116,7 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningFalseFalseTrue_CallsDelayFunctionOnce()
     {
         var delayFnMock = CreateMockDelayFn();
-        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(THIRD_ATTEMPT);
+        var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(ThirdAttempt);
         IRetry retry = new Retry()
         {
             MaxRetries = 3,
