@@ -15,24 +15,18 @@ namespace interview
 
         private const string DatabaseWriteError = "Error while adding shipment notification";
         private const string DatabaseWriteSuccess = "Successfully added shipment notification";
-        private const int MaxDbWriteAttempts = 3;
-        private const int DbWriteDelaySeconds = 10;
 
         // https://webhook.site/#!/view/ed4785fc-49db-4c2c-a40f-ceb775e72d96/6ecd6e52-0471-4cef-9c8e-eba216982c43/1
         private const string WebHookUrl =
             "https://webhook.site/ed4785fc-49db-4c2c-a40f-ceb775e72d96";
 
         private readonly IConfiguration _configuration;
-        private readonly string _dbName;
         private readonly HttpClient _httpClient;
         private readonly ILogger<AddShipmentNotification> _logger;
 
         private readonly IRetry _retryFn;
         private readonly ISanitation _sanitation;
-        private readonly string _shipmentLinesTableName;
-        private readonly string _shipmentTableName;
-
-        private readonly string _sqlConnectionString;
+        private readonly ISqlDbService _sqlDbService;
 
         /// <summary>
         /// Function constructor, used for Dependency Injection
