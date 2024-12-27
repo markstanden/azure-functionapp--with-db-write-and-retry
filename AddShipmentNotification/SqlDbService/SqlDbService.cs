@@ -1,9 +1,10 @@
-using interview;
 using interview.Sanitation;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 
-public class SqlDbService<T>
+namespace interview.SqlDbService;
+
+public class SqlDbService<T> : ISqlDbService<T>
 {
     private readonly string _connectionString;
     private readonly string _dbName;
