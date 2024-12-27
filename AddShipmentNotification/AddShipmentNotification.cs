@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using interview.Sanitation;
+using interview.SqlDbService;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace interview
@@ -12,16 +15,18 @@ namespace interview
 
         private const string DatabaseWriteError = "Error while adding shipment notification";
         private const string DatabaseWriteSuccess = "Successfully added shipment notification";
-        private const int MaxDbWriteAttempts = 3;
-        private const int DbWriteDelaySeconds = 10;
 
         // https://webhook.site/#!/view/ed4785fc-49db-4c2c-a40f-ceb775e72d96/6ecd6e52-0471-4cef-9c8e-eba216982c43/1
         private const string WebHookUrl =
             "https://webhook.site/ed4785fc-49db-4c2c-a40f-ceb775e72d96";
 
+        private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
-
         private readonly ILogger<AddShipmentNotification> _logger;
+
+        private readonly IRetry _retryFn;
+        private readonly ISanitation _sanitation;
+        private readonly ISqlDbService _sqlDbService;
 
         /// <summary>
         /// Function constructor, used for Dependency Injection
@@ -30,10 +35,18 @@ namespace interview
         /// <param name="httpClient"></param>
         public AddShipmentNotification(
             ILogger<AddShipmentNotification> logger,
+            IConfiguration configuration,
+            IRetry retryFn,
+            ISanitation sanitation,
+            ISqlDbService sqlDbService,
             HttpClient httpClient
         )
         {
             _logger = logger;
+            _configuration = configuration;
+            _retryFn = retryFn;
+            _sanitation = sanitation;
+            _sqlDbService = sqlDbService;
             _httpClient = httpClient;
         }
 
@@ -58,8 +71,12 @@ namespace interview
                 return;
             }
 
-            // Attempt to write to the DB
-            bool result = await AttemptDbAdd(notification);
+            // Call the retry function and pass the method to add the notification to the DB to it
+            // The retry function attempts to do the write 3 times (by default) with a 10 second delay between attempts (default)
+            // returns true if successful, false if unsuccessful
+            bool result = await _retryFn.Attempt(
+                () => _sqlDbService.WriteNotification(notification, _sanitation)
+            );
 
             if (!result)
             {
@@ -113,49 +130,6 @@ namespace interview
         }
 
         /// <summary>
-        /// Method to recursively attempt to add a Shipment Notification to the DB
-        /// </summary>
-        /// <param name="notification"></param>
-        /// <param name="attempt"></param>
-        /// <param name="collector"></param>
-        /// <returns></returns>
-        private async Task<bool> AttemptDbAdd(ShipmentNotification notification, int attempt = 1)
-        {
-            _logger.LogInformation(
-                "Attempt {attempt} - Adding Shipment Notification {shipmentId} to DB",
-                attempt,
-                notification.shipmentId
-            );
-
-            // Creates a sql connection class to add the notification to the DB
-            var sql = new SqlDbService<AddShipmentNotification>(
-                GetEnvironmentVariable("SqlConnectionString") ?? "SqlConnectionString NOT SET",
-                _logger
-            );
-
-            // Makes the connection and adds the notification
-            var result = await sql.WriteNotification(notification, new Sanitation.Sanitation());
-
-            if (result)
-            {
-                return result;
-            }
-
-            // Failed to add record to DB
-            // Check whether the max attempts have been made
-            if (attempt >= MaxDbWriteAttempts)
-            {
-                return false;
-            }
-
-            // Attempts threshold not yet met, recursively re-attempt to add the record
-            await Task.Delay(TimeSpan.FromSeconds(DbWriteDelaySeconds));
-
-            // Recursively call with in incremented attempt number
-            return await AttemptDbAdd(notification, attempt + 1);
-        }
-
-        /// <summary>
         /// Method sends an HTTP Request to the provided url to
         /// register the successful addition of the record to the DB
         /// </summary>
@@ -163,18 +137,6 @@ namespace interview
         private async Task SendSuccessMessage(string query, string message, string url = WebHookUrl)
         {
             await _httpClient.GetAsync($"{url}?{query}={message}");
-        }
-
-        /// <summary>
-        /// Gets environment variables at runtime
-        /// courtesy of MS
-        /// https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-csharp?tabs=functionsv2%2Cfixed-delay%2Cazure-cli#environment-variables
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static string? GetEnvironmentVariable(string name)
-        {
-            return Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
         }
     }
 }

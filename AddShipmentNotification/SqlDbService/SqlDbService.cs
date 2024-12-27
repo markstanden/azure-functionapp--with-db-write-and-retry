@@ -1,22 +1,23 @@
-using interview;
 using interview.Sanitation;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 
-public class SqlDbService<T>
+namespace interview.SqlDbService;
+
+public class SqlDbService : ISqlDbService
 {
     private readonly string _connectionString;
     private readonly string _dbName;
     private readonly string _dbShipmentLinesTableName;
     private readonly string _dbShipmentTableName;
-    private readonly ILogger<T> _logger;
+    private readonly ILogger<SqlDbService> _logger;
 
     public SqlDbService(
         string connectionString,
-        ILogger<T> logger,
-        string dbName = "dbo",
-        string dbShipmentTableName = "markShipment",
-        string dbShipmentLinesTableName = "markShipment_Line"
+        ILogger<SqlDbService> logger,
+        string? dbName = "dbo",
+        string? dbShipmentTableName = "markShipment",
+        string? dbShipmentLinesTableName = "markShipment_Line"
     )
     {
         _connectionString = connectionString;
@@ -37,6 +38,11 @@ public class SqlDbService<T>
             await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 var rowsAffected = 0;
+                var sanitisedShipmentId = sanitation.AlphaNumericsWithSpecialCharacters(
+                    notification.shipmentId,
+                    ['-']
+                );
+
                 await connection.OpenAsync();
 
                 var shipmentQueryString =
@@ -46,10 +52,7 @@ public class SqlDbService<T>
                 )
                 {
                     sqlCommand.Parameters.Clear();
-                    sqlCommand.Parameters.AddWithValue(
-                        "@shipmentId",
-                        sanitation.AlphaNumericsOnly(notification.shipmentId)
-                    );
+                    sqlCommand.Parameters.AddWithValue("@shipmentId", sanitisedShipmentId);
                     sqlCommand.Parameters.AddWithValue("@shipmentDate", notification.shipmentDate);
 
                     rowsAffected += await sqlCommand.ExecuteNonQueryAsync();
@@ -64,7 +67,7 @@ public class SqlDbService<T>
                     )
                     {
                         sqlCommand.Parameters.Clear();
-                        sqlCommand.Parameters.AddWithValue("@shipmentId", notification.shipmentId);
+                        sqlCommand.Parameters.AddWithValue("@shipmentId", sanitisedShipmentId);
                         sqlCommand.Parameters.AddWithValue(
                             "@sku",
                             sanitation.AlphaNumericsOnly(shipmentLine.sku)
