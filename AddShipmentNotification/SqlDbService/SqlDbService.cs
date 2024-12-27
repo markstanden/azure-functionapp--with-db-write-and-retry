@@ -37,6 +37,11 @@ public class SqlDbService<T>
             await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 var rowsAffected = 0;
+                var sanitisedShipmentId = sanitation.AlphaNumericsWithSpecialCharacters(
+                    notification.shipmentId,
+                    ['-']
+                );
+
                 await connection.OpenAsync();
 
                 var shipmentQueryString =
@@ -46,10 +51,7 @@ public class SqlDbService<T>
                 )
                 {
                     sqlCommand.Parameters.Clear();
-                    sqlCommand.Parameters.AddWithValue(
-                        "@shipmentId",
-                        sanitation.AlphaNumericsOnly(notification.shipmentId)
-                    );
+                    sqlCommand.Parameters.AddWithValue("@shipmentId", sanitisedShipmentId);
                     sqlCommand.Parameters.AddWithValue("@shipmentDate", notification.shipmentDate);
 
                     rowsAffected += await sqlCommand.ExecuteNonQueryAsync();
@@ -64,7 +66,7 @@ public class SqlDbService<T>
                     )
                     {
                         sqlCommand.Parameters.Clear();
-                        sqlCommand.Parameters.AddWithValue("@shipmentId", notification.shipmentId);
+                        sqlCommand.Parameters.AddWithValue("@shipmentId", sanitisedShipmentId);
                         sqlCommand.Parameters.AddWithValue(
                             "@sku",
                             sanitation.AlphaNumericsOnly(shipmentLine.sku)
