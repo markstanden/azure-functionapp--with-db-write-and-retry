@@ -77,8 +77,13 @@ namespace interview
                 return;
             }
 
-            // Attempt to write to the DB
-            bool result = await AttemptDbAdd(notification);
+            // Creates a sql connection class to add the notification to the DB
+            var sql = new SqlDbService<AddShipmentNotification>(_sqlConnectionString, _logger);
+
+            var retry = new Retry.Retry();
+            bool result = await retry.Attempt(
+                () => sql.WriteNotification(notification, new Sanitation.Sanitation())
+            );
 
             if (!result)
             {
@@ -129,46 +134,6 @@ namespace interview
                 );
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Method to recursively attempt to add a Shipment Notification to the DB
-        /// </summary>
-        /// <param name="notification"></param>
-        /// <param name="attempt"></param>
-        /// <param name="collector"></param>
-        /// <returns></returns>
-        private async Task<bool> AttemptDbAdd(ShipmentNotification notification, int attempt = 1)
-        {
-            _logger.LogInformation(
-                "Attempt {attempt} - Adding Shipment Notification {shipmentId} to DB",
-                attempt,
-                notification.shipmentId
-            );
-
-            // Creates a sql connection class to add the notification to the DB
-            var sql = new SqlDbService<AddShipmentNotification>(_sqlConnectionString, _logger);
-
-            // Makes the connection and adds the notification
-            var result = await sql.WriteNotification(notification, new Sanitation.Sanitation());
-
-            if (result)
-            {
-                return result;
-            }
-
-            // Failed to add record to DB
-            // Check whether the max attempts have been made
-            if (attempt >= MaxDbWriteAttempts)
-            {
-                return false;
-            }
-
-            // Attempts threshold not yet met, recursively re-attempt to add the record
-            await Task.Delay(TimeSpan.FromSeconds(DbWriteDelaySeconds));
-
-            // Recursively call with in incremented attempt number
-            return await AttemptDbAdd(notification, attempt + 1);
         }
 
         /// <summary>

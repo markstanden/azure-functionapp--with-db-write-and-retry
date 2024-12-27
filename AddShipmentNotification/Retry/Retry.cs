@@ -2,7 +2,7 @@ namespace interview.Retry;
 
 public class Retry : IRetry
 {
-    public int DelaySeconds = 10;
+    public int DelaySeconds { get; init; } = 10;
 
     public Func<TimeSpan, Task> DelayFn { get; init; } =
         async (TimeSpan timespan) => await Task.Delay(timespan);
