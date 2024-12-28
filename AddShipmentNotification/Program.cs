@@ -1,3 +1,4 @@
+using interview.HttpClientWrapper;
 using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;
@@ -18,11 +19,14 @@ builder.ConfigureFunctionsWebApplication();
 
 // Adds Http Client as a DI Constructor parameter
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<IRetry>(new Retry());
+builder.Services.AddSingleton<IHttpClientWrapper, HttpClientWrapper>(
+    serviceProvider => new HttpClientWrapper(serviceProvider.GetService<HttpClient>())
+);
+builder.Services.AddSingleton<IRetry, Retry>();
 builder.Services.AddSingleton<ISqlDbService, SqlDbService>(serviceProvider => new SqlDbService(
     builder.Configuration.GetValue<string>("SqlConnectionString") ?? "CONNECTION_STRING_NOT_SET",
     serviceProvider.GetRequiredService<ILogger<SqlDbService>>()
 ));
-builder.Services.AddSingleton<ISanitation>(new Sanitation());
+builder.Services.AddSingleton<ISanitation, Sanitation>();
 
 builder.Build().Run();

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using interview.HttpClientWrapper;
 using interview.Sanitation;
 using interview.SqlDbService;
 using Microsoft.Azure.Functions.Worker;
@@ -19,7 +20,7 @@ namespace interview
         public const string WebHookUrl =
             "https://webhook.site/ed4785fc-49db-4c2c-a40f-ceb775e72d96";
 
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientWrapper _httpClient;
         private readonly ILogger<AddShipmentNotification> _logger;
         private readonly IRetry _retryFn;
         private readonly ISanitation _sanitation;
@@ -38,7 +39,7 @@ namespace interview
             IRetry retryFn,
             ISanitation sanitation,
             ISqlDbService sqlDbService,
-            HttpClient httpClient
+            IHttpClientWrapper httpClient
         )
         {
             _logger = logger;

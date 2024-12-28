@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using interview;
+using interview.HttpClientWrapper;
 using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;
@@ -13,7 +14,7 @@ namespace AddShipmentNotification.Tests.Unit.RunTest;
 public class RunTest
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
-    private readonly Mock<HttpClient> _mockHttp;
+    private readonly Mock<IHttpClientWrapper> _mockHttp;
     private readonly Mock<ILogger<interview.AddShipmentNotification>> _mockLog;
     private readonly Mock<ISqlDbService> _mockSqlDbService;
     private readonly IRetry _testRetry;
@@ -26,7 +27,7 @@ public class RunTest
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
         _mockActions = new Mock<ServiceBusMessageActions>();
-        _mockHttp = new Mock<HttpClient>();
+        _mockHttp = new Mock<IHttpClientWrapper>();
 
         DbWriteSuccess(true);
     }
@@ -339,5 +340,107 @@ public class RunTest
                 ),
             Times.Once
         );
+    }
+
+    [Fact]
+    public async Task AddShipmentNotification_WithSqlServiceAddError_ShouldNotSendHttpSuccessMessage()
+    {
+        var shipmentId = "TestShipmentId";
+        var shipmentDate = "2024-12-09T08:00:00Z";
+        var testData = new Dictionary<string, object>
+        {
+            { "shipmentId", shipmentId },
+            { "shipmentDate", shipmentDate },
+            {
+                "shipmentLines",
+                new[]
+                {
+                    new { sku = "TestSku01", quantity = 1 },
+                    new { sku = "TestSku02", quantity = 2 },
+                }
+            },
+        };
+        var json = JsonSerializer.Serialize(testData);
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        DbWriteSuccess(false);
+
+        var sut = new interview.AddShipmentNotification(
+            _mockLog.Object,
+            _testRetry,
+            _testSanitation,
+            _mockSqlDbService.Object,
+            _mockHttp.Object
+        );
+        await sut.Run(stubMessage, _mockActions.Object);
+
+        _mockHttp.Verify(actions => actions.GetAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddShipmentNotification_WithSqlWriteSuccess_ShouldSendHttpSuccessMessage()
+    {
+        var shipmentId = "TestShipmentId";
+        var shipmentDate = "2024-12-09T08:00:00Z";
+        var testData = new Dictionary<string, object>
+        {
+            { "shipmentId", shipmentId },
+            { "shipmentDate", shipmentDate },
+            {
+                "shipmentLines",
+                new[]
+                {
+                    new { sku = "TestSku01", quantity = 1 },
+                    new { sku = "TestSku02", quantity = 2 },
+                }
+            },
+        };
+        var json = JsonSerializer.Serialize(testData);
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        DbWriteSuccess(true);
+
+        var sut = new interview.AddShipmentNotification(
+            _mockLog.Object,
+            _testRetry,
+            _testSanitation,
+            _mockSqlDbService.Object,
+            _mockHttp.Object
+        );
+        await sut.Run(stubMessage, _mockActions.Object);
+
+        _mockHttp.Verify(actions => actions.GetAsync(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddShipmentNotification_WithSqlWriteSuccess_HttpSuccessMessageContainsShipmentId()
+    {
+        var shipmentId = "TestShipmentId";
+        var shipmentDate = "2024-12-09T08:00:00Z";
+        var testData = new Dictionary<string, object>
+        {
+            { "shipmentId", shipmentId },
+            { "shipmentDate", shipmentDate },
+            {
+                "shipmentLines",
+                new[]
+                {
+                    new { sku = "TestSku01", quantity = 1 },
+                    new { sku = "TestSku02", quantity = 2 },
+                }
+            },
+        };
+        var json = JsonSerializer.Serialize(testData);
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        DbWriteSuccess(true);
+
+        var sut = new interview.AddShipmentNotification(
+            _mockLog.Object,
+            _testRetry,
+            _testSanitation,
+            _mockSqlDbService.Object,
+            _mockHttp.Object
+        );
+        await sut.Run(stubMessage, _mockActions.Object);
+
+        _mockHttp.Verify(actions => actions.GetAsync(It.IsRegex(shipmentId)), Times.Once);
     }
 }
