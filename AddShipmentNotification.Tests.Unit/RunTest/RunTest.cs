@@ -120,13 +120,20 @@ public class RunTest
     /// <summary>
     /// Attempts to catch any provided JSON not matching the expected schema
     /// </summary>
-    [Fact]
-    public async Task AddShipmentNotification_WithInvalidJSONIdFieldName_ShouldSendServiceBusDeadLetter()
+    [Theory]
+    [InlineData("", "Empty string provided as key")]
+    [InlineData("ShipmentId", "Invalid capitalization")]
+    [InlineData("shipmentID", "Invalid capitalization")]
+    [InlineData("shipment_Id", "Additional underscore within key")]
+    public async Task AddShipmentNotification_WithInvalidJSONIdFieldName_ShouldSendServiceBusDeadLetter(
+        string invalidFieldname,
+        string reason
+    )
     {
         // Invalid Id fieldname - Should fail to serialize
         var testData = new Dictionary<string, object>
         {
-            { "shipment_Id", "TestValue" },
+            { invalidFieldname, "TestValue" },
             { "shipmentDate", "2024-12-09T08:00:00Z" },
             { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
         };
@@ -152,25 +159,29 @@ public class RunTest
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
-            Times.Once
+            Times.Once,
+            $"Expected JSON serialization to fail, with key '{invalidFieldname}' ({reason}) - as it is not part of the expected JSON schema."
         );
     }
 
+    /// <summary>
+    /// Attempts to catch any provided JSON not matching the expected schema
+    /// </summary>
     [Theory]
-    [InlineData(null, "No Date provided")]
-    [InlineData("", "Empty String Provided")]
-    [InlineData("2024/12/09", "Invalid date format")]
-    [InlineData("2024-02-30T08:00:00Z", "Invalid date")]
-    public async Task AddShipmentNotification_WithInvalidJSONDateValue_ShouldFail(
-        string dateValue,
-        string errorMessage
+    [InlineData("", "Empty string provided as key")]
+    [InlineData("ShipmentDate", "Invalid capitalization")]
+    [InlineData("shipmentDATE", "Invalid capitalization")]
+    [InlineData("shipment_Date", "Additional underscore within key")]
+    public async Task AddShipmentNotification_WithInvalidJSONDateFieldName_ShouldSendServiceBusDeadLetter(
+        string invalidFieldname,
+        string reason
     )
     {
-        // Invalid Date value - Should fail to serialize
+        // Invalid Id fieldname - Should fail to serialize
         var testData = new Dictionary<string, object>
         {
             { "shipmentId", "TestValue" },
-            { "shipmentDate", dateValue },
+            { invalidFieldname, "2024-12-09T08:00:00Z" },
             { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
         };
         var json = JsonSerializer.Serialize(testData);
@@ -195,7 +206,52 @@ public class RunTest
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
-            Times.Once
+            Times.Once,
+            $"Expected JSON serialization to fail, with key '{invalidFieldname}' ({reason}) - as it is not part of the expected JSON schema."
+        );
+    }
+
+    [Theory]
+    [InlineData(null, "No Date provided")]
+    [InlineData("", "Empty String Provided")]
+    [InlineData("2024/12/09", "Invalid date format")]
+    [InlineData("2024-02-30T08:00:00Z", "Invalid date")]
+    public async Task AddShipmentNotification_WithInvalidJSONDateValue_ShouldFail(
+        string? dateValue,
+        string reason
+    )
+    {
+        // Invalid Date value - Should fail to serialize
+        var testData = new Dictionary<string, object>
+        {
+            { "shipmentId", "TestValue" },
+            { "shipmentDate", dateValue! },
+            { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
+        };
+        var json = JsonSerializer.Serialize(testData);
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+
+        var sut = new interview.AddShipmentNotification(
+            _mockLog.Object,
+            _mockConfig.Object,
+            _testRetry,
+            _testSanitation,
+            _mockSqlDbService.Object,
+            _mockHttp.Object
+        );
+        await sut.Run(stubMessage, _mockActions.Object);
+
+        _mockActions.Verify(
+            actions =>
+                actions.DeadLetterMessageAsync(
+                    It.Is<ServiceBusReceivedMessage>(message => message == stubMessage),
+                    It.IsAny<Dictionary<string, object>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once,
+            $"Expected date with {dateValue} to fail ({reason})"
         );
     }
 }
