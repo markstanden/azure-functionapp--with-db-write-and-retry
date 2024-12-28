@@ -89,17 +89,16 @@ namespace interview
             }
 
             // DB Write successful
-            _logger.LogInformation(
-                "{success} [MessageId: {id}]",
-                DatabaseWriteSuccess,
-                message.MessageId
-            );
+            _logger.LogInformation($"{DatabaseWriteSuccess} [MessageId: {message.MessageId}]");
 
             // Mark the servicebus message as complete
             await messageActions.CompleteMessageAsync(message);
 
             // Send the success message
-            await SendSuccessMessage("shipmentId", notification.shipmentId);
+            await SendSuccessMessage(
+                "shipmentId",
+                _sanitation.AlphaNumericsWithSpecialCharacters(notification.shipmentId, ['-'])
+            );
         }
 
         /// <summary>
