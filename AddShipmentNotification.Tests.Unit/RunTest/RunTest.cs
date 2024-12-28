@@ -35,9 +35,7 @@ public class RunTest
     private void DbWriteSuccess(bool success = true)
     {
         _mockSqlDbService
-            .Setup<Task<bool>>(mock =>
-                mock.WriteNotification(It.IsAny<ShipmentNotification>(), It.IsAny<ISanitation>())
-            )
+            .Setup<Task<bool>>(mock => mock.WriteNotification(It.IsAny<ShipmentNotification>()))
             .ReturnsAsync(success);
     }
 
@@ -289,8 +287,7 @@ public class RunTest
                         && notification.shipmentLines[0].quantity == 1
                         && notification.shipmentLines[1].sku == "TestSku02"
                         && notification.shipmentLines[1].quantity == 2
-                    ),
-                    It.IsAny<ISanitation>()
+                    )
                 ),
             Times.Once
         );

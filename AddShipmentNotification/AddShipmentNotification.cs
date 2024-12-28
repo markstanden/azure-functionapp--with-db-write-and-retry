@@ -74,7 +74,7 @@ namespace interview
             // The retry function attempts to do the write 3 times (by default) with a 10 second delay between attempts (default)
             // returns true if successful, false if unsuccessful
             bool result = await _retryFn.Attempt(
-                () => _sqlDbService.WriteNotification(notification, _sanitation)
+                () => _sqlDbService.WriteNotification(notification)
             );
 
             if (!result)
