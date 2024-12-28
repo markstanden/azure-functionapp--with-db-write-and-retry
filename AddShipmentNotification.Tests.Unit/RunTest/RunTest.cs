@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using interview;
 using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;
@@ -8,9 +9,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace AddShipmentNotification.Tests.Unit;
+namespace AddShipmentNotification.Tests.Unit.RunTest;
 
-public class AddShipmentNotificationTests
+public class RunTest
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
     private readonly Mock<IConfiguration> _mockConfig;
@@ -20,26 +21,37 @@ public class AddShipmentNotificationTests
     private readonly IRetry _testRetry;
     private readonly ISanitation _testSanitation;
 
-    public AddShipmentNotificationTests()
+    public RunTest()
     {
         _mockLog = new Mock<ILogger<interview.AddShipmentNotification>>();
         _mockConfig = new Mock<IConfiguration>();
-        _testRetry = new Retry();
+        _testRetry = new Retry() { DelaySeconds = 0 };
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
-        _mockHttp = new Mock<HttpClient>();
         _mockActions = new Mock<ServiceBusMessageActions>();
+        _mockHttp = new Mock<HttpClient>();
+
+        DbWriteSuccess(true);
     }
 
-    [Fact(Skip = "Awaiting DI implementation of SqlDbService")]
-    public void AddShipmentNotification_WithOneValidLine_ShouldSucceed()
+    public void DbWriteSuccess(bool success = true)
+    {
+        _mockSqlDbService
+            .Setup<Task<bool>>(mock =>
+                mock.WriteNotification(It.IsAny<ShipmentNotification>(), It.IsAny<ISanitation>())
+            )
+            .ReturnsAsync(success);
+    }
+
+    [Fact]
+    public async Task AddShipmentNotification_WithOneValidLine_ShouldSendServiceBusSucceed()
     {
         // Arrange - Set variables specific to this test
-        var testData = new
+        var testData = new Dictionary<string, object>
         {
-            shipmentId = "ValidOneLine",
-            shipmentDate = "2024-12-09T08:00:00Z",
-            shipmentLines = new[] { new { sku = "TestSku01", quantity = 1 } },
+            { "shipmentId", "TestValue" },
+            { "shipmentDate", "2024-12-09T08:00:00Z" },
+            { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
         };
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
@@ -53,7 +65,7 @@ public class AddShipmentNotificationTests
             _mockSqlDbService.Object,
             _mockHttp.Object
         );
-        var result = sut.Run(stubMessage, _mockActions.Object);
+        await sut.Run(stubMessage, _mockActions.Object);
 
         // Assert that the result is as expected.
         _mockActions.Verify(
@@ -66,17 +78,20 @@ public class AddShipmentNotificationTests
         );
     }
 
-    [Fact(Skip = "Awaiting DI implementation of SqlDbService")]
-    public void AddShipmentNotification_WithTwoValidLines_ShouldSucceed()
+    [Fact]
+    public async Task AddShipmentNotification_WithTwoValidLines_ShouldSendServiceBusSucceed()
     {
-        var testData = new
+        var testData = new Dictionary<string, object>
         {
-            shipmentId = "ValidTwoLines",
-            shipmentDate = "2024-12-09T08:00:00Z",
-            shipmentLines = new[]
+            { "shipmentId", "TestValue" },
+            { "shipmentDate", "2024-12-09T08:00:00Z" },
             {
-                new { sku = "TestSku01", quantity = 1 },
-                new { sku = "TestSku02", quantity = 2 },
+                "shipmentLines",
+                new[]
+                {
+                    new { sku = "TestSku01", quantity = 1 },
+                    new { sku = "TestSku02", quantity = 2 },
+                }
             },
         };
         var json = JsonSerializer.Serialize(testData);
@@ -90,7 +105,7 @@ public class AddShipmentNotificationTests
             _mockSqlDbService.Object,
             _mockHttp.Object
         );
-        var result = sut.Run(stubMessage, _mockActions.Object);
+        await sut.Run(stubMessage, _mockActions.Object);
 
         _mockActions.Verify(
             actions =>
@@ -102,15 +117,18 @@ public class AddShipmentNotificationTests
         );
     }
 
-    [Fact(Skip = "Awaiting DI implementation of SqlDbService")]
-    public void AddShipmentNotification_WithInvalidJSONIdFieldName_ShouldFail()
+    /// <summary>
+    /// Attempts to catch any provided JSON not matching the expected schema
+    /// </summary>
+    [Fact]
+    public async Task AddShipmentNotification_WithInvalidJSONIdFieldName_ShouldSendServiceBusDeadLetter()
     {
-        // Invalid Id fieldname
-        var testData = new
+        // Invalid Id fieldname - Should fail to serialize
+        var testData = new Dictionary<string, object>
         {
-            Id = "InvalidIdFieldName",
-            shipmentDate = "2024-12-09T08:00:00Z",
-            shipmentLines = new[] { new { sku = "TestSku01", quantity = 1 } },
+            { "shipment_Id", "TestValue" },
+            { "shipmentDate", "2024-12-09T08:00:00Z" },
+            { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
         };
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
@@ -123,7 +141,7 @@ public class AddShipmentNotificationTests
             _mockSqlDbService.Object,
             _mockHttp.Object
         );
-        var result = sut.Run(stubMessage, _mockActions.Object);
+        await sut.Run(stubMessage, _mockActions.Object);
 
         _mockActions.Verify(
             actions =>
@@ -138,15 +156,22 @@ public class AddShipmentNotificationTests
         );
     }
 
-    [Fact(Skip = "Awaiting DI implementation of SqlDbService")]
-    public void AddShipmentNotification_WithInvalidJSONDateValue_ShouldFail()
+    [Theory]
+    [InlineData(null, "No Date provided")]
+    [InlineData("", "Empty String Provided")]
+    [InlineData("2024/12/09", "Invalid date format")]
+    [InlineData("2024-02-30T08:00:00Z", "Invalid date")]
+    public async Task AddShipmentNotification_WithInvalidJSONDateValue_ShouldFail(
+        string dateValue,
+        string errorMessage
+    )
     {
-        // Invalid Id fieldname
-        var testData = new
+        // Invalid Date value - Should fail to serialize
+        var testData = new Dictionary<string, object>
         {
-            shipmentId = "InvalidDateValue",
-            shipmentDate = "2024/12/09",
-            shipmentLines = new[] { new { sku = "TestSku01", quantity = 1 } },
+            { "shipmentId", "TestValue" },
+            { "shipmentDate", dateValue },
+            { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
         };
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
@@ -159,7 +184,7 @@ public class AddShipmentNotificationTests
             _mockSqlDbService.Object,
             _mockHttp.Object
         );
-        var result = sut.Run(stubMessage, _mockActions.Object);
+        await sut.Run(stubMessage, _mockActions.Object);
 
         _mockActions.Verify(
             actions =>
