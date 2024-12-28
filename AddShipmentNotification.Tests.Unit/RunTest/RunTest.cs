@@ -5,7 +5,6 @@ using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -14,7 +13,6 @@ namespace AddShipmentNotification.Tests.Unit.RunTest;
 public class RunTest
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
-    private readonly Mock<IConfiguration> _mockConfig;
     private readonly Mock<HttpClient> _mockHttp;
     private readonly Mock<ILogger<interview.AddShipmentNotification>> _mockLog;
     private readonly Mock<ISqlDbService> _mockSqlDbService;
@@ -24,7 +22,6 @@ public class RunTest
     public RunTest()
     {
         _mockLog = new Mock<ILogger<interview.AddShipmentNotification>>();
-        _mockConfig = new Mock<IConfiguration>();
         _testRetry = new Retry() { DelaySeconds = 0 };
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
@@ -59,7 +56,6 @@ public class RunTest
         // Act - trigger the system under test with the arranged variables
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
-            _mockConfig.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
@@ -99,7 +95,6 @@ public class RunTest
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
-            _mockConfig.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
@@ -142,7 +137,6 @@ public class RunTest
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
-            _mockConfig.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
@@ -189,7 +183,6 @@ public class RunTest
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
-            _mockConfig.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
@@ -233,7 +226,6 @@ public class RunTest
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
-            _mockConfig.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
@@ -278,7 +270,6 @@ public class RunTest
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
-            _mockConfig.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
