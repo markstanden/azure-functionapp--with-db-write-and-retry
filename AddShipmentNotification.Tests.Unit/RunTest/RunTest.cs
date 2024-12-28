@@ -294,4 +294,50 @@ public class RunTest
             Times.Once
         );
     }
+
+    [Fact]
+    public async Task AddShipmentNotification_WithSqlServiceAddError_ShouldSendServiceBusDeadLetter()
+    {
+        var shipmentId = "TestShipmentId";
+        var shipmentDate = "2024-12-09T08:00:00Z";
+        var testData = new Dictionary<string, object>
+        {
+            { "shipmentId", shipmentId },
+            { "shipmentDate", shipmentDate },
+            {
+                "shipmentLines",
+                new[]
+                {
+                    new { sku = "TestSku01", quantity = 1 },
+                    new { sku = "TestSku02", quantity = 2 },
+                }
+            },
+        };
+        var json = JsonSerializer.Serialize(testData);
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        DbWriteSuccess(false);
+
+        var sut = new interview.AddShipmentNotification(
+            _mockLog.Object,
+            _testRetry,
+            _testSanitation,
+            _mockSqlDbService.Object,
+            _mockHttp.Object
+        );
+        await sut.Run(stubMessage, _mockActions.Object);
+
+        _mockActions.Verify(
+            actions =>
+                actions.DeadLetterMessageAsync(
+                    It.Is<ServiceBusReceivedMessage>(message => message == stubMessage),
+                    It.IsAny<Dictionary<string, object>>(),
+                    It.Is<string>(message =>
+                        message == interview.AddShipmentNotification.DatabaseWriteError
+                    ),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
 }
