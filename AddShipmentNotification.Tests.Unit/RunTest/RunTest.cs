@@ -31,7 +31,7 @@ public class RunTest
         DbWriteSuccess(true);
     }
 
-    public void DbWriteSuccess(bool success = true)
+    private void DbWriteSuccess(bool success = true)
     {
         _mockSqlDbService
             .Setup<Task<bool>>(mock =>
