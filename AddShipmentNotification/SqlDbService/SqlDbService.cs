@@ -11,26 +11,26 @@ public class SqlDbService : ISqlDbService
     private readonly string _dbShipmentLinesTableName;
     private readonly string _dbShipmentTableName;
     private readonly ILogger<SqlDbService> _logger;
+    private readonly ISanitation _sanitation;
 
     public SqlDbService(
         string connectionString,
+        ISanitation sanitation,
         ILogger<SqlDbService> logger,
-        string? dbName = "dbo",
-        string? dbShipmentTableName = "markShipment",
-        string? dbShipmentLinesTableName = "markShipment_Line"
+        string dbName,
+        string dbShipmentTableName,
+        string dbShipmentLinesTableName
     )
     {
         _connectionString = connectionString;
+        _sanitation = sanitation;
         _logger = logger;
         _dbName = dbName;
         _dbShipmentTableName = dbShipmentTableName;
         _dbShipmentLinesTableName = dbShipmentLinesTableName;
     }
 
-    public async Task<bool> WriteNotification(
-        ShipmentNotification notification,
-        ISanitation sanitation
-    )
+    public async Task<bool> WriteNotification(ShipmentNotification notification)
     {
         try
         {
@@ -38,7 +38,7 @@ public class SqlDbService : ISqlDbService
             await using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 var rowsAffected = 0;
-                var sanitisedShipmentId = sanitation.AlphaNumericsWithSpecialCharacters(
+                var sanitisedShipmentId = _sanitation.AlphaNumericsWithSpecialCharacters(
                     notification.shipmentId,
                     ['-']
                 );
@@ -70,7 +70,7 @@ public class SqlDbService : ISqlDbService
                         sqlCommand.Parameters.AddWithValue("@shipmentId", sanitisedShipmentId);
                         sqlCommand.Parameters.AddWithValue(
                             "@sku",
-                            sanitation.AlphaNumericsOnly(shipmentLine.sku)
+                            _sanitation.AlphaNumericsOnly(shipmentLine.sku)
                         );
                         sqlCommand.Parameters.AddWithValue("@quantity", shipmentLine.quantity);
 

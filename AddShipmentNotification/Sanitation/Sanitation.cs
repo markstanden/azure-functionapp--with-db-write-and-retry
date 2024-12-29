@@ -13,16 +13,6 @@ public class Sanitation : ISanitation
     }
 
     /// <summary>
-    /// Declarative convenience method to hard strip a string to alphanumerics and special characters used in datetimes only.
-    /// </summary>
-    /// <param name="untrustedDateString"></param>
-    /// <returns></returns>
-    public string DateTimeOnly(string untrustedDateString)
-    {
-        return AlphaNumericsWithSpecialCharacters(untrustedDateString, ['-', ':']);
-    }
-
-    /// <summary>
     /// Method to clean a string to include only alphanumerics and characters contained in the provided array.
     /// </summary>
     /// <param name="untrustedMessage">The string to sanitise</param>
