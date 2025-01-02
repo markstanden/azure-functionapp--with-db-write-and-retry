@@ -1,3 +1,4 @@
+using interview.Retry;
 using interview.Sanitation;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,7 @@ public class SqlDbService : ISqlDbService
         _dbShipmentLinesTableName = dbShipmentLinesTableName;
     }
 
-    public async Task<bool> WriteNotification(ShipmentNotification notification)
+    public async Task<IRetryable> WriteNotification(ShipmentNotification notification)
     {
         try
         {
@@ -78,17 +79,21 @@ public class SqlDbService : ISqlDbService
                     }
                 }
 
-                return rowsAffected > 0;
+                return new Retryable
+                {
+                    success = rowsAffected > 0,
+                    message = $"Success: {rowsAffected} rows affected.",
+                };
             }
         }
         catch (SqlException sqlEx)
         {
             _logger.LogError($"Failed to write to DB: {sqlEx.Message}");
-            return false;
+            return new Retryable { success = false, message = sqlEx.Message };
         }
         catch (Exception ex)
         {
-            return false;
+            return new Retryable { success = false, message = ex.Message };
         }
     }
 }

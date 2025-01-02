@@ -1,3 +1,5 @@
+using interview.Retry;
+
 namespace AddShipmentNotification.Tests.Unit.FakeRetryFn;
 
 /// <summary>
@@ -19,12 +21,20 @@ public class FakeRetryTaskFn
         RetryTask = () =>
         {
             ExecutionCount++;
-            return Task.FromResult(ExecutionCount == expectedAttemptCount);
+
+            var result = new Retryable
+            {
+                success = ExecutionCount == expectedAttemptCount,
+                message = "",
+            };
+
+            // Need to specify return type of task as interface due to type invariance
+            return Task.FromResult<IRetryable>(result);
         };
     }
 
     public int ExecutionCount { get; private set; }
-    public Func<Task<bool>> RetryTask { get; }
+    public Func<Task<IRetryable>> RetryTask { get; }
 
     /// <summary>
     /// Static factory method to return a prepared class instance.

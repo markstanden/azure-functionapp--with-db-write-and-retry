@@ -1,6 +1,8 @@
+using interview.Retry;
+
 namespace interview.SqlDbService;
 
 public interface ISqlDbService
 {
-    public Task<bool> WriteNotification(ShipmentNotification notification);
+    public Task<IRetryable> WriteNotification(ShipmentNotification notification);
 }
