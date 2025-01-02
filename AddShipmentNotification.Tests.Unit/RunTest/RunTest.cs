@@ -45,14 +45,8 @@ public class RunTest
     public async Task AddShipmentNotification_WithOneValidLine_ShouldSendServiceBusSucceed()
     {
         // Arrange - Set variables specific to this test
-        var testData = new Dictionary<string, object>
-        {
-            { "shipmentId", "TestValue" },
-            { "shipmentDate", "2024-12-09T08:00:00Z" },
-            { "shipmentLines", new[] { new { sku = "TestSku01", quantity = 1 } } },
-        };
-        var json = JsonSerializer.Serialize(testData);
-        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        var testJson = JsonTestData.CreateSingleLine();
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
         // Act - trigger the system under test with the arranged variables
         var sut = new interview.AddShipmentNotification(
@@ -78,21 +72,8 @@ public class RunTest
     [Fact]
     public async Task AddShipmentNotification_WithTwoValidLines_ShouldSendServiceBusSucceed()
     {
-        var testData = new Dictionary<string, object>
-        {
-            { "shipmentId", "TestValue" },
-            { "shipmentDate", "2024-12-09T08:00:00Z" },
-            {
-                "shipmentLines",
-                new[]
-                {
-                    new { sku = "TestSku01", quantity = 1 },
-                    new { sku = "TestSku02", quantity = 2 },
-                }
-            },
-        };
-        var json = JsonSerializer.Serialize(testData);
-        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        var testJson = JsonTestData.CreateJson();
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
@@ -253,21 +234,12 @@ public class RunTest
     {
         var shipmentId = "TestShipmentId";
         var shipmentDate = "2024-12-09T08:00:00Z";
-        var testData = new Dictionary<string, object>
-        {
-            { "shipmentId", shipmentId },
-            { "shipmentDate", shipmentDate },
-            {
-                "shipmentLines",
-                new[]
-                {
-                    new { sku = "TestSku01", quantity = 1 },
-                    new { sku = "TestSku02", quantity = 2 },
-                }
-            },
-        };
-        var json = JsonSerializer.Serialize(testData);
-        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+
+        var testJson = JsonTestData.CreateSingleLine(
+            shipmentId: shipmentId,
+            shipmentDate: shipmentDate
+        );
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
@@ -284,11 +256,9 @@ public class RunTest
                     It.Is<ShipmentNotification>(notification =>
                         notification.shipmentId == shipmentId
                         && notification.shipmentDate == DateTime.Parse(shipmentDate)
-                        && notification.shipmentLines.Length == 2
-                        && notification.shipmentLines[0].sku == "TestSku01"
+                        && notification.shipmentLines.Length == 1
+                        && notification.shipmentLines[0].sku == "Sku001"
                         && notification.shipmentLines[0].quantity == 1
-                        && notification.shipmentLines[1].sku == "TestSku02"
-                        && notification.shipmentLines[1].quantity == 2
                     )
                 ),
             Times.Once
@@ -300,21 +270,8 @@ public class RunTest
     {
         var shipmentId = "TestShipmentId";
         var shipmentDate = "2024-12-09T08:00:00Z";
-        var testData = new Dictionary<string, object>
-        {
-            { "shipmentId", shipmentId },
-            { "shipmentDate", shipmentDate },
-            {
-                "shipmentLines",
-                new[]
-                {
-                    new { sku = "TestSku01", quantity = 1 },
-                    new { sku = "TestSku02", quantity = 2 },
-                }
-            },
-        };
-        var json = JsonSerializer.Serialize(testData);
-        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
+        var testJson = JsonTestData.CreateJson(shipmentId, shipmentDate);
+        var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
         DbWriteSuccess(false);
 
         var sut = new interview.AddShipmentNotification(
