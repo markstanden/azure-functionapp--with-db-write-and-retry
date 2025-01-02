@@ -73,17 +73,18 @@ namespace interview
             // Call the retry function and pass the method to add the notification to the DB to it
             // The retry function attempts to do the write 3 times (by default) with a 10 second delay between attempts (default)
             // returns true if successful, false if unsuccessful
-            bool result = await _retryFn.Attempt(
+            var dbWriteResult = await _retryFn.Attempt(
                 () => _sqlDbService.WriteNotification(notification)
             );
 
-            if (!result)
+            if (!dbWriteResult.success)
             {
                 // DB Write failed
                 // Add the servicebus message to the dead letter queue
                 await messageActions.DeadLetterMessageAsync(
                     message,
-                    deadLetterReason: DatabaseWriteError
+                    deadLetterReason: DatabaseWriteError,
+                    deadLetterErrorDescription: dbWriteResult.message
                 );
                 return;
             }

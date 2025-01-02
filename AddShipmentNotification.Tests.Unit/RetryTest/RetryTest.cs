@@ -27,7 +27,7 @@ public class RetryTest
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(1, fakeRetryTaskFn.ExecutionCount);
-        Assert.True(result);
+        Assert.True(result.success);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class RetryTest
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(2, fakeRetryTaskFn.ExecutionCount);
-        Assert.True(result);
+        Assert.True(result.success);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class RetryTest
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(3, fakeRetryTaskFn.ExecutionCount);
-        Assert.True(result);
+        Assert.True(result.success);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class RetryTest
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(3, fakeRetryTaskFn.ExecutionCount);
-        Assert.False(result);
+        Assert.False(result.success);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class RetryTest
         var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(2, fakeRetryTaskFn.ExecutionCount);
-        Assert.False(result);
+        Assert.False(result.success);
     }
 
     [Fact]

@@ -9,16 +9,17 @@ public class Retry : IRetry
 
     public int MaxRetries { get; init; } = 3;
 
-    public async Task<bool> Attempt(Func<Task<bool>> fnAsync, int attempt = 1)
+    public async Task<IRetryable> Attempt(Func<Task<IRetryable>> fnAsync, int attempt = 1)
     {
-        if (await fnAsync())
+        var result = await fnAsync();
+        if (result.success)
         {
-            return true;
+            return result;
         }
 
         if (attempt >= MaxRetries)
         {
-            return false;
+            return result;
         }
 
         await DelayFn(TimeSpan.FromSeconds(DelaySeconds));

@@ -35,8 +35,10 @@ public class RunTest
     private void DbWriteSuccess(bool success = true)
     {
         _mockSqlDbService
-            .Setup<Task<bool>>(mock => mock.WriteNotification(It.IsAny<ShipmentNotification>()))
-            .ReturnsAsync(success);
+            .Setup<Task<IRetryable>>(mock =>
+                mock.WriteNotification(It.IsAny<ShipmentNotification>())
+            )
+            .ReturnsAsync(new Retryable { success = success, message = "success" });
     }
 
     [Fact]
