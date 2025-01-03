@@ -1,25 +1,25 @@
 {
-  "shipmentId": "MarkTest-2024-12-20-2000-WithSanitation",
-  "shipmentDate": "2024-12-20T20:00:00Z",
+  "shipmentId": "MarkTest-2025-01-03-1130-WithSanitation!@#$%^&*()-=_+{}[]:;",
+  "shipmentDate": "2025-01-03T11:30:00Z",
   "shipmentLines": [
     {
-      "sku": "SKU001",
+      "sku": "Sku001",
       "quantity": 11
     },
     {
-      "sku": "SKU002",
+      "sku": "Sku002",
       "quantity": 12
     },
     {
-      "sku": "SKU003",
+      "sku": "Sku003",
       "quantity": 13
     },
     {
-      "sku": "SKU004",
+      "sku": "Sku004",
       "quantity": 14
     },
     {
-      "sku": "SKU005",
+      "sku": "Sku005",
       "quantity": 15
     }
   ]
