@@ -59,7 +59,7 @@ public class SqlDbService : ISqlDbService
             return new Retryable
             {
                 success = totalRowsAffected >= 2,
-                message = $"Success: {rowsAffected} rows affected.",
+                message = $"{rowsAffected} rows affected.",
             };
         }
         catch (DbException dbEx)
