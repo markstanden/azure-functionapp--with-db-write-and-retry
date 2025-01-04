@@ -76,6 +76,7 @@ public class SqlDbService : ISqlDbService
         }
         catch (Exception ex)
         {
+            _logger.LogError($"Failed to write to DB: {ex.Message}");
             return new Retryable { success = false, message = ex.Message };
         }
     }
@@ -94,23 +95,20 @@ public class SqlDbService : ISqlDbService
         return await command.ExecuteNonQueryAsync();
     }
 
-    private async Task<int> WriteShipmentLinesAsync(
+    public async Task<int> WriteShipmentLinesAsync(
         DbConnection connection,
         string sanitisedShipmentId,
         IEnumerable<ShipmentLine> shipmentLines
     )
     {
-        var rowsAffected = 0;
-        foreach (var shipmentLine in shipmentLines)
-        {
-            rowsAffected += await WriteShipmentLineAsync(
-                connection,
-                sanitisedShipmentId,
-                shipmentLine
-            );
-        }
-
-        return rowsAffected;
+        return await shipmentLines
+            .Select(async shipmentLine =>
+                await WriteShipmentLineAsync(connection, sanitisedShipmentId, shipmentLine)
+            )
+            // We can't use a Task.WhenAll(shipmentLineTasks).Sum() as the connection cannot handle
+            // multiple concurrent async requests, so we must add the lines synchronously.  The reducer below
+            // awaits the result of each addition before starting the next DB request.
+            .Aggregate(async (sumTask, currentTask) => await sumTask + await currentTask);
     }
 
     public async Task<int> WriteShipmentLineAsync(
