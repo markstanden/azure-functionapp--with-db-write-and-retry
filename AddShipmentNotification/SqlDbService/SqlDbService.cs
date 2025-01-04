@@ -1,10 +1,10 @@
 using System.Data.Common;
+using interview;
 using interview.Retry;
 using interview.Sanitation;
+using interview.SqlDbService;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
-
-namespace interview.SqlDbService;
 
 public class SqlDbService : ISqlDbService
 {
@@ -39,42 +39,28 @@ public class SqlDbService : ISqlDbService
     /// <returns></returns>
     public async Task<IRetryable> WriteNotificationAsync(ShipmentNotification notification)
     {
+        var sanitisedShipmentId = _sanitation.AlphaNumericsWithSpecialCharacters(
+            notification.shipmentId,
+            ['-']
+        );
+
         try
         {
             await using var connection = _connector.GetConnection();
             await connection.OpenAsync();
 
             var rowsAffected = 0;
-            var sanitisedShipmentId = _sanitation.AlphaNumericsWithSpecialCharacters(
-                notification.shipmentId,
-                ['-']
+
+            rowsAffected += await WriteShipmentAsync(
+                connection,
+                sanitisedShipmentId,
+                notification.shipmentDate
             );
-
-            await using (var command = connection.CreateCommand())
-            {
-                command.CommandText = CreateShipmentQuery();
-                command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
-                command.Parameters.Add(
-                    new SqlParameter("@shipmentDate", notification.shipmentDate)
-                );
-
-                rowsAffected += await command.ExecuteNonQueryAsync();
-            }
-
-            foreach (var shipmentLine in notification.shipmentLines)
-            {
-                await using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = CreateShipmentLinesQuery();
-                    command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
-                    command.Parameters.Add(
-                        new SqlParameter("@sku", _sanitation.AlphaNumericsOnly(shipmentLine.sku))
-                    );
-                    command.Parameters.Add(new SqlParameter("@quantity", shipmentLine.quantity));
-
-                    rowsAffected += await command.ExecuteNonQueryAsync();
-                }
-            }
+            rowsAffected += await WriteShipmentLinesAsync(
+                connection,
+                sanitisedShipmentId,
+                notification.shipmentLines
+            );
 
             return new Retryable
             {
@@ -82,7 +68,6 @@ public class SqlDbService : ISqlDbService
                 message = $"Success: {rowsAffected} rows affected.",
             };
         }
-        //Common parent error class allows for catching of both SqlException and SqliteExceptions
         catch (DbException dbEx)
         {
             _logger.LogError($"Failed to write to DB: {dbEx.Message}");
@@ -94,13 +79,46 @@ public class SqlDbService : ISqlDbService
         }
     }
 
-    public string CreateShipmentQuery()
+    private async Task<int> WriteShipmentAsync(
+        DbConnection connection,
+        string sanitisedShipmentId,
+        DateTime shipmentDate
+    )
     {
-        return $"INSERT INTO {_dbName}.{_dbShipmentTableName} (shipmentId, shipmentDate) VALUES (@shipmentId, @shipmentDate)";
+        await using var command = connection.CreateCommand();
+        command.CommandText = CreateShipmentQuery();
+        command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
+        command.Parameters.Add(new SqlParameter("@shipmentDate", shipmentDate));
+
+        return await command.ExecuteNonQueryAsync();
     }
 
-    public string CreateShipmentLinesQuery()
+    private async Task<int> WriteShipmentLinesAsync(
+        DbConnection connection,
+        string sanitisedShipmentId,
+        IEnumerable<ShipmentLine> shipmentLines
+    )
     {
-        return $"INSERT INTO {_dbName}.{_dbShipmentLinesTableName} (shipmentId, sku, quantity) VALUES (@shipmentId, @sku, @quantity)";
+        var rowsAffected = 0;
+        foreach (var shipmentLine in shipmentLines)
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = CreateShipmentLinesQuery();
+            command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
+            command.Parameters.Add(
+                new SqlParameter("@sku", _sanitation.AlphaNumericsOnly(shipmentLine.sku))
+            );
+            command.Parameters.Add(new SqlParameter("@quantity", shipmentLine.quantity));
+
+            rowsAffected += await command.ExecuteNonQueryAsync();
+        }
+
+        return rowsAffected;
     }
+
+    public string CreateShipmentQuery() =>
+        $"INSERT INTO {_dbName}.{_dbShipmentTableName} (shipmentId, shipmentDate) VALUES (@shipmentId, @shipmentDate)";
+
+    public string CreateShipmentLinesQuery() =>
+        $"INSERT INTO {_dbName}.{_dbShipmentLinesTableName} (shipmentId, sku, quantity) VALUES (@shipmentId, @sku, @quantity)";
 }
