@@ -50,12 +50,9 @@ public class SqlDbService : ISqlDbService
                 ['-']
             );
 
-            var shipmentQueryString =
-                $"INSERT INTO {_dbName}.{_dbShipmentTableName} (shipmentId, shipmentDate) VALUES (@shipmentId, @shipmentDate)";
-
             await using (var command = connection.CreateCommand())
             {
-                command.CommandText = shipmentQueryString;
+                command.CommandText = CreateShipmentQuery();
                 command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
                 command.Parameters.Add(
                     new SqlParameter("@shipmentDate", notification.shipmentDate)
@@ -64,14 +61,11 @@ public class SqlDbService : ISqlDbService
                 rowsAffected += await command.ExecuteNonQueryAsync();
             }
 
-            var shipmentLinesQueryString =
-                $"INSERT INTO {_dbName}.{_dbShipmentLinesTableName} (shipmentId, sku, quantity) VALUES (@shipmentId, @sku, @quantity)";
-
             foreach (var shipmentLine in notification.shipmentLines)
             {
                 await using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = shipmentLinesQueryString;
+                    command.CommandText = CreateShipmentLinesQuery();
                     command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
                     command.Parameters.Add(
                         new SqlParameter("@sku", _sanitation.AlphaNumericsOnly(shipmentLine.sku))
@@ -98,5 +92,15 @@ public class SqlDbService : ISqlDbService
         {
             return new Retryable { success = false, message = ex.Message };
         }
+    }
+
+    public string CreateShipmentQuery()
+    {
+        return $"INSERT INTO {_dbName}.{_dbShipmentTableName} (shipmentId, shipmentDate) VALUES (@shipmentId, @shipmentDate)";
+    }
+
+    public string CreateShipmentLinesQuery()
+    {
+        return $"INSERT INTO {_dbName}.{_dbShipmentLinesTableName} (shipmentId, sku, quantity) VALUES (@shipmentId, @sku, @quantity)";
     }
 }
