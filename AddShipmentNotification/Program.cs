@@ -26,9 +26,14 @@ builder.Services.AddSingleton<IHttpClientWrapper, HttpClientWrapper>(
     serviceProvider => new HttpClientWrapper(serviceProvider.GetService<HttpClient>())
 );
 
+// Adds a Sql connector singleton, for dependency injection into SqlDbService
+builder.Services.AddSingleton<IDbConnector, SqlConnector>(serviceProvider => new SqlConnector(
+    builder.Configuration.GetValue<string>("SqlConnectionString") ?? "SqlConnectionString_NOT_SET"
+));
+
 // Adds DqlConnection dependency to be injected into SqlDbService
 builder.Services.AddSingleton<ISqlDbService, SqlDbService>(serviceProvider => new SqlDbService(
-    builder.Configuration.GetValue<string>("SqlConnectionString") ?? "SqlConnectionString_NOT_SET",
+    serviceProvider.GetService<IDbConnector>(),
     serviceProvider.GetRequiredService<ISanitation>(),
     serviceProvider.GetRequiredService<ILogger<SqlDbService>>(),
     builder.Configuration.GetValue<string>("dbName") ?? "dbName_NOT_SET",
