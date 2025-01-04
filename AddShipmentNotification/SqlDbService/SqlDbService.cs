@@ -49,22 +49,16 @@ public class SqlDbService : ISqlDbService
             await using var connection = _connector.GetConnection();
             await connection.OpenAsync();
 
-            var rowsAffected = 0;
+            var rowsAffected = await Task.WhenAll(
+                WriteShipmentAsync(connection, sanitisedShipmentId, notification.shipmentDate),
+                WriteShipmentLinesAsync(connection, sanitisedShipmentId, notification.shipmentLines)
+            );
 
-            rowsAffected += await WriteShipmentAsync(
-                connection,
-                sanitisedShipmentId,
-                notification.shipmentDate
-            );
-            rowsAffected += await WriteShipmentLinesAsync(
-                connection,
-                sanitisedShipmentId,
-                notification.shipmentLines
-            );
+            var totalRowsAffected = rowsAffected.Sum();
 
             return new Retryable
             {
-                success = rowsAffected > 0,
+                success = totalRowsAffected >= 2,
                 message = $"Success: {rowsAffected} rows affected.",
             };
         }
