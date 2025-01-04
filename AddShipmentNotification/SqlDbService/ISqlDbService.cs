@@ -4,5 +4,5 @@ namespace interview.SqlDbService;
 
 public interface ISqlDbService
 {
-    public Task<IRetryable> WriteNotification(ShipmentNotification notification);
+    public Task<IRetryable> WriteNotificationAsync(ShipmentNotification notification);
 }

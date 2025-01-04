@@ -36,7 +36,7 @@ public class RunTest
     {
         _mockSqlDbService
             .Setup<Task<IRetryable>>(mock =>
-                mock.WriteNotification(It.IsAny<ShipmentNotification>())
+                mock.WriteNotificationAsync(It.IsAny<ShipmentNotification>())
             )
             .ReturnsAsync(new Retryable { success = success, message = "success" });
     }
@@ -252,7 +252,7 @@ public class RunTest
 
         _mockSqlDbService.Verify(
             service =>
-                service.WriteNotification(
+                service.WriteNotificationAsync(
                     It.Is<ShipmentNotification>(notification =>
                         notification.shipmentId == shipmentId
                         && notification.shipmentDate == DateTime.Parse(shipmentDate)

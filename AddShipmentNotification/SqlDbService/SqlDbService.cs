@@ -32,7 +32,12 @@ public class SqlDbService : ISqlDbService
         _dbShipmentLinesTableName = dbShipmentLinesTableName;
     }
 
-    public async Task<IRetryable> WriteNotification(ShipmentNotification notification)
+    /// <summary>
+    /// Writes a notification to the DB
+    /// </summary>
+    /// <param name="notification"></param>
+    /// <returns></returns>
+    public async Task<IRetryable> WriteNotificationAsync(ShipmentNotification notification)
     {
         try
         {
