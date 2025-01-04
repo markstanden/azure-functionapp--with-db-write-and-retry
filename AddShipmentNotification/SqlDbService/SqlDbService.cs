@@ -103,18 +103,31 @@ public class SqlDbService : ISqlDbService
         var rowsAffected = 0;
         foreach (var shipmentLine in shipmentLines)
         {
-            await using var command = connection.CreateCommand();
-            command.CommandText = CreateShipmentLinesQuery();
-            command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
-            command.Parameters.Add(
-                new SqlParameter("@sku", _sanitation.AlphaNumericsOnly(shipmentLine.sku))
+            rowsAffected += await WriteShipmentLineAsync(
+                connection,
+                sanitisedShipmentId,
+                shipmentLine
             );
-            command.Parameters.Add(new SqlParameter("@quantity", shipmentLine.quantity));
-
-            rowsAffected += await command.ExecuteNonQueryAsync();
         }
 
         return rowsAffected;
+    }
+
+    public async Task<int> WriteShipmentLineAsync(
+        DbConnection connection,
+        string sanitisedShipmentId,
+        ShipmentLine shipmentLine
+    )
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = CreateShipmentLinesQuery();
+        command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
+        command.Parameters.Add(
+            new SqlParameter("@sku", _sanitation.AlphaNumericsOnly(shipmentLine.sku))
+        );
+        command.Parameters.Add(new SqlParameter("@quantity", shipmentLine.quantity));
+
+        return await command.ExecuteNonQueryAsync();
     }
 
     public string CreateShipmentQuery() =>
