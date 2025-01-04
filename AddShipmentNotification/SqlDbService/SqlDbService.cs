@@ -49,17 +49,24 @@ public class SqlDbService : ISqlDbService
             await using var connection = _connector.GetConnection();
             await connection.OpenAsync();
 
-            var rowsAffected = await Task.WhenAll(
-                WriteShipmentAsync(connection, sanitisedShipmentId, notification.shipmentDate),
-                WriteShipmentLinesAsync(connection, sanitisedShipmentId, notification.shipmentLines)
-            );
-
-            var totalRowsAffected = rowsAffected.Sum();
+            int rowsAffected = new[]
+            {
+                await WriteShipmentAsync(
+                    connection,
+                    sanitisedShipmentId,
+                    notification.shipmentDate
+                ),
+                await WriteShipmentLinesAsync(
+                    connection,
+                    sanitisedShipmentId,
+                    notification.shipmentLines
+                ),
+            }.Sum();
 
             return new Retryable
             {
-                success = totalRowsAffected >= 2,
-                message = $"{totalRowsAffected} rows affected.",
+                success = rowsAffected > 2,
+                message = $"{rowsAffected} rows affected.",
             };
         }
         catch (DbException dbEx)
