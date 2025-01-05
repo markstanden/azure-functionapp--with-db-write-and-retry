@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using interview;
-using interview.HttpClientWrapper;
 using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;
+using interview.WebhookService;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -14,9 +14,9 @@ namespace AddShipmentNotification.Tests.Unit.RunTest;
 public class RunTest
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
-    private readonly Mock<IHttpClientWrapper> _mockHttp;
     private readonly Mock<ILogger<interview.AddShipmentNotification>> _mockLog;
     private readonly Mock<ISqlDbService> _mockSqlDbService;
+    private readonly Mock<IWebhookService> _mockWebhookService;
     private readonly IRetry _testRetry;
     private readonly ISanitation _testSanitation;
 
@@ -27,7 +27,7 @@ public class RunTest
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
         _mockActions = new Mock<ServiceBusMessageActions>();
-        _mockHttp = new Mock<IHttpClientWrapper>();
+        _mockWebhookService = new Mock<IWebhookService>();
 
         DbWriteSuccess(true);
     }
@@ -39,6 +39,13 @@ public class RunTest
                 mock.WriteNotificationAsync(It.IsAny<ShipmentNotification>())
             )
             .ReturnsAsync(new Retryable { success = success, message = "success" });
+    }
+
+    private void WebhookServiceSetup()
+    {
+        _mockWebhookService.Setup<Task>(mock =>
+            mock.SendMessage(It.IsAny<string>(), It.IsAny<string>())
+        );
     }
 
     [Fact]
@@ -54,7 +61,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -80,7 +87,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -122,7 +129,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -168,7 +175,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -211,7 +218,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -246,7 +253,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -279,7 +286,7 @@ public class RunTest
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
@@ -319,17 +326,21 @@ public class RunTest
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
         DbWriteSuccess(false);
+        WebhookServiceSetup();
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
-        _mockHttp.Verify(actions => actions.GetAsync(It.IsAny<string>()), Times.Never);
+        _mockWebhookService.Verify(
+            actions => actions.SendMessage(It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never
+        );
     }
 
     [Fact]
@@ -353,17 +364,21 @@ public class RunTest
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
         DbWriteSuccess(true);
+        WebhookServiceSetup();
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
-        _mockHttp.Verify(actions => actions.GetAsync(It.IsAny<string>()), Times.Once);
+        _mockWebhookService.Verify(
+            actions => actions.SendMessage(It.IsRegex(nameof(shipmentId)), It.IsRegex(shipmentId)),
+            Times.Once
+        );
     }
 
     [Fact]
@@ -387,16 +402,20 @@ public class RunTest
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
         DbWriteSuccess(true);
+        WebhookServiceSetup();
 
         var sut = new interview.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
             _mockSqlDbService.Object,
-            _mockHttp.Object
+            _mockWebhookService.Object
         );
         await sut.Run(stubMessage, _mockActions.Object);
 
-        _mockHttp.Verify(actions => actions.GetAsync(It.IsRegex(shipmentId)), Times.Once);
+        _mockWebhookService.Verify(
+            actions => actions.SendMessage(It.IsRegex(nameof(shipmentId)), It.IsRegex(shipmentId)),
+            Times.Once
+        );
     }
 }

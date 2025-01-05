@@ -10,11 +10,13 @@ namespace interview
 {
     public class AddShipmentNotification
     {
-        private const string InvalidJsonError =
+        // made public as used to verify correct messaging within tests.
+        public const string InvalidJsonError =
             "Serialization of ServiceBus message failed - Invalid/Incomplete JSON";
 
-        private const string DatabaseWriteError = "Error while adding shipment notification";
-        private const string DatabaseWriteSuccess = "Successfully added shipment notification";
+        public const string DatabaseWriteError = "Error while adding shipment notification";
+        public const string DatabaseWriteSuccess = "Successfully added shipment notification";
+
         private readonly ILogger<AddShipmentNotification> _logger;
         private readonly IRetry _retryFn;
         private readonly ISanitation _sanitation;
