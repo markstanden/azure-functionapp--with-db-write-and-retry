@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using interview.HttpClientWrapper;
 using interview.Sanitation;
 using interview.SqlDbService;
+using interview.WebhookService;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -10,21 +10,17 @@ namespace interview
 {
     public class AddShipmentNotification
     {
-        public const string InvalidJsonError =
+        private const string InvalidJsonError =
             "Serialization of ServiceBus message failed - Invalid/Incomplete JSON";
 
-        public const string DatabaseWriteError = "Error while adding shipment notification";
-        public const string DatabaseWriteSuccess = "Successfully added shipment notification";
-
-        // https://webhook.site/#!/view/ed4785fc-49db-4c2c-a40f-ceb775e72d96/6ecd6e52-0471-4cef-9c8e-eba216982c43/1
-        public const string WebHookUrl =
-            "https://webhook.site/ed4785fc-49db-4c2c-a40f-ceb775e72d96";
-
-        private readonly IHttpClientWrapper _httpClient;
+        private const string DatabaseWriteError = "Error while adding shipment notification";
+        private const string DatabaseWriteSuccess = "Successfully added shipment notification";
         private readonly ILogger<AddShipmentNotification> _logger;
         private readonly IRetry _retryFn;
         private readonly ISanitation _sanitation;
         private readonly ISqlDbService _sqlDbService;
+
+        private readonly IWebhookService _webhookService;
 
         /// <summary>
         /// Function constructor, used for Dependency Injection
@@ -33,20 +29,20 @@ namespace interview
         /// <param name="retryFn"></param>
         /// <param name="sanitation"></param>
         /// <param name="sqlDbService"></param>
-        /// <param name="httpClient"></param>
+        /// <param name="webhookService"></param>
         public AddShipmentNotification(
             ILogger<AddShipmentNotification> logger,
             IRetry retryFn,
             ISanitation sanitation,
             ISqlDbService sqlDbService,
-            IHttpClientWrapper httpClient
+            IWebhookService webhookService
         )
         {
             _logger = logger;
             _retryFn = retryFn;
             _sanitation = sanitation;
             _sqlDbService = sqlDbService;
-            _httpClient = httpClient;
+            _webhookService = webhookService;
         }
 
         [Function(nameof(AddShipmentNotification))]
@@ -61,7 +57,7 @@ namespace interview
 
             // Type guard for DB add below.
             // Exit early if notification parsing has failed.
-            if (notification == null)
+            if (notification is null)
             {
                 await messageActions.DeadLetterMessageAsync(
                     message,
@@ -96,7 +92,7 @@ namespace interview
             await messageActions.CompleteMessageAsync(message);
 
             // Send the success message
-            await SendSuccessMessage(
+            await _webhookService.SendMessage(
                 "shipmentId",
                 _sanitation.AlphaNumericsWithSpecialCharacters(notification.shipmentId, ['-'])
             );
@@ -112,8 +108,8 @@ namespace interview
         {
             try
             {
-                // Attempts to deserialise the provided JSON into class instances.
-                // JSON schema enforced by required fields on data classes, deserialisation will
+                // Attempts to deserialize the provided JSON into class instances.
+                // JSON schema is enforced by required fields on data classes, deserialization will
                 // throw if JSON is invalid.
                 return message.Body.ToObjectFromJson<ShipmentNotification>();
             }
@@ -126,18 +122,6 @@ namespace interview
                 );
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Method sends an HTTP Request to the provided url to
-        /// register the successful addition of the record to the DB
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="message"></param>
-        /// <param name="url"></param>
-        private async Task SendSuccessMessage(string query, string message, string url = WebHookUrl)
-        {
-            await _httpClient.GetAsync($"{url}?{query}={message}");
         }
     }
 }
