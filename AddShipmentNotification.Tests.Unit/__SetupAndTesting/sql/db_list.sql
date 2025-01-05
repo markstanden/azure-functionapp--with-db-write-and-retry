@@ -1,3 +1,7 @@
+/*
+  creates an inner join between the two tables and displays the results with
+  a shipmentId containing the required text
+ */
 SELECT
     shipments.shipmentId,
     shipments.shipmentDate,
