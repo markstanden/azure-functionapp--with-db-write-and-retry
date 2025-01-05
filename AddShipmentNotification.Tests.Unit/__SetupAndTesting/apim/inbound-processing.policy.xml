@@ -1,0 +1,82 @@
+<policies>
+    <inbound>
+        <base/>
+        <validate-content unspecified-content-type-action="detect" max-size="4096" size-exceeded-action="detect"
+                          errors-variable-name="validationErrors">
+            <content type="application/json" validate-as="json" action="detect" schema-id="AddShipmentNotification"/>
+        </validate-content>
+        <choose>
+            <when condition="@(context.Variables.ContainsKey('validationErrors'))">
+                <return-response>
+                    <set-status code="400" reason="Bad Request"/>
+                    <set-body>@{
+                        var errors = context.Variables["validationErrors"];
+                        return new JObject(
+                        new JProperty('statusCode', 400),
+                        new JProperty('message', 'Schema validation failed'),
+                        new JProperty('errors', JArray.FromObject(errors))
+                        ).ToString();
+                        }
+                    </set-body>
+                </return-response>
+            </when>
+        </choose>
+        <!-- Schema is met, set up request to servicebus -->
+        <authentication-managed-identity
+                resource="https://servicebus.azure.net"
+                client-id="--user-managed-identity-client-id--"
+                output-token-variable-name="msi-access-token"/>
+        <set-variable name="message-content" value="@(context.Request.Body.As<string>())"/>
+        <send-request mode="new" response-variable-name="servicebus-response" timeout="20" ignore-error="false">
+            <set-url>@{
+                var serviceBusNamespace = 'marks-dev-uksouth-1.servicebus.windows.net';
+                var queueName = 'shipmentnotification';
+                return string.Format('https://{0}/{1}/messages', serviceBusNamespace, queueName);
+                }
+            </set-url>
+            <set-method>POST</set-method>
+            <set-header name="Authorization" exists-action="override">
+                <value>@(string.Format('Bearer {0}', context.Variables.GetValueOrDefault<string>('msi-access-token')))
+                </value>
+            </set-header>
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-body>@{
+                return context.Variables.GetValueOrDefault<string>('message-content');
+                }
+            </set-body>
+        </send-request>
+        <choose>
+            <when condition="@(context.Variables.GetValueOrDefault<IResponse>('servicebus-response').StatusCode == 201)">
+                <return-response>
+                    <set-status code="202" reason="Accepted"/>
+                </return-response>
+            </when>
+            <otherwise>
+                <return-response>
+                    <set-status code="500" reason="Internal Server Error"/>
+                    <set-body>@{
+                        var response = context.Variables.GetValueOrDefault<IResponse>('servicebus-response');
+                        return string.Format('Failed to forward message to Service Bus. Status: {0}, Response: {1}',
+                        response?.StatusCode,
+                        response?.Body?.As<string>());
+                        }
+                    </set-body>
+                </return-response>
+            </otherwise>
+        </choose>
+    </inbound>
+    <backend>
+        <base/>
+    </backend>
+    <outbound>
+        <base/>
+    </outbound>
+    <on-error>
+        <base/>
+        <set-status code="500" reason="Internal Server Error"/>
+        <set-body>@(string.Format('An error occurred processing your request: {0}', context.LastError.Message))
+        </set-body>
+    </on-error>
+</policies>
