@@ -44,6 +44,10 @@ public class SqlDbService : ISqlDbService
             ['-']
         );
 
+        // We know how many rows to expect to be written, it is a single
+        // row for the shipment table and a line each for the shipment lines.
+        var expectedRows = 1 + (notification.shipmentLines.Length);
+
         try
         {
             await using var connection = _connector.GetConnection();
@@ -65,7 +69,7 @@ public class SqlDbService : ISqlDbService
 
             return new Retryable
             {
-                success = rowsAffected > 2,
+                success = rowsAffected == expectedRows,
                 message = $"{rowsAffected} rows affected.",
             };
         }
