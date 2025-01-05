@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 public class SqlDbService : ISqlDbService
 {
     private readonly IDbConnector _connector;
-    private readonly string _dbName;
+    private readonly string _dbSchema;
     private readonly string _dbShipmentLinesTableName;
     private readonly string _dbShipmentTableName;
     private readonly ILogger<ISqlDbService> _logger;
@@ -19,7 +19,7 @@ public class SqlDbService : ISqlDbService
         IDbConnector connector,
         ISanitation sanitation,
         ILogger<ISqlDbService> logger,
-        string dbName,
+        string dbSchema,
         string dbShipmentTableName,
         string dbShipmentLinesTableName
     )
@@ -27,7 +27,7 @@ public class SqlDbService : ISqlDbService
         _connector = connector;
         _sanitation = sanitation;
         _logger = logger;
-        _dbName = dbName;
+        _dbSchema = dbSchema;
         _dbShipmentTableName = dbShipmentTableName;
         _dbShipmentLinesTableName = dbShipmentLinesTableName;
     }
@@ -88,13 +88,21 @@ public class SqlDbService : ISqlDbService
     )
     {
         await using var command = connection.CreateCommand();
-        command.CommandText = CreateShipmentQuery();
+        command.CommandText = CreateShipmentInsertQuery(_dbSchema, _dbShipmentTableName);
         command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
         command.Parameters.Add(new SqlParameter("@shipmentDate", shipmentDate));
 
         return await command.ExecuteNonQueryAsync();
     }
 
+    /// <summary>
+    /// Takes all the provided shipment lines and synchronously adds
+    /// them to the DB using the provided connection
+    /// </summary>
+    /// <param name="connection"></param>
+    /// <param name="sanitisedShipmentId"></param>
+    /// <param name="shipmentLines"></param>
+    /// <returns></returns>
     public async Task<int> WriteShipmentLinesAsync(
         DbConnection connection,
         string sanitisedShipmentId,
@@ -102,15 +110,26 @@ public class SqlDbService : ISqlDbService
     )
     {
         return await shipmentLines
-            .Select(async shipmentLine =>
-                await WriteShipmentLineAsync(connection, sanitisedShipmentId, shipmentLine)
-            )
-            // We can't use a Task.WhenAll(shipmentLineTasks).Sum() as the connection cannot handle
-            // multiple concurrent async requests, so we must add the lines synchronously.  The reducer below
-            // awaits the result of each addition before starting the next DB request.
-            .Aggregate(async (sumTask, currentTask) => await sumTask + await currentTask);
+        // We can't use a Task.WhenAll(shipmentLineTasks).Sum() as the connection cannot handle
+        // multiple concurrent async requests, so we must add the lines synchronously.  The reducer below
+        // awaits the result of each addition before starting the next DB request.
+        .Aggregate(
+            // Accumulator init is first param
+            Task.FromResult(0),
+            // reducer is second param
+            async (affectedLineAcc, shipmentLine) =>
+                await affectedLineAcc
+                + await WriteShipmentLineAsync(connection, sanitisedShipmentId, shipmentLine)
+        );
     }
 
+    /// <summary>
+    /// Writes a single shipmentLine to the Database using the provided connection
+    /// </summary>
+    /// <param name="connection"></param>
+    /// <param name="sanitisedShipmentId"></param>
+    /// <param name="shipmentLine"></param>
+    /// <returns></returns>
     public async Task<int> WriteShipmentLineAsync(
         DbConnection connection,
         string sanitisedShipmentId,
@@ -118,7 +137,7 @@ public class SqlDbService : ISqlDbService
     )
     {
         await using var command = connection.CreateCommand();
-        command.CommandText = CreateShipmentLinesQuery();
+        command.CommandText = CreateShipmentLineInsertQuery(_dbSchema, _dbShipmentLinesTableName);
         command.Parameters.Add(new SqlParameter("@shipmentId", sanitisedShipmentId));
         command.Parameters.Add(
             new SqlParameter("@sku", _sanitation.AlphaNumericsOnly(shipmentLine.sku))
@@ -128,9 +147,21 @@ public class SqlDbService : ISqlDbService
         return await command.ExecuteNonQueryAsync();
     }
 
-    public string CreateShipmentQuery() =>
-        $"INSERT INTO {_dbName}.{_dbShipmentTableName} (shipmentId, shipmentDate) VALUES (@shipmentId, @shipmentDate)";
+    /// <summary>
+    /// SQL query to insert a single shipment into the shipment table
+    /// </summary>
+    /// <param name="schema">The table schema prefix</param>
+    /// <param name="table">The DB table to add the record to</param>
+    /// <returns>SQL Query string with the parameters @shipmentId and @shipmentDate</returns>
+    public string CreateShipmentInsertQuery(string schema, string table) =>
+        $"INSERT INTO {schema}.{table} (shipmentId, shipmentDate) VALUES (@shipmentId, @shipmentDate)";
 
-    public string CreateShipmentLinesQuery() =>
-        $"INSERT INTO {_dbName}.{_dbShipmentLinesTableName} (shipmentId, sku, quantity) VALUES (@shipmentId, @sku, @quantity)";
+    /// <summary>
+    /// SQL query to insert a single shipment line into the shipmentLines table
+    /// </summary>
+    /// <param name="schema">The table schema prefix</param>
+    /// <param name="table">The DB table to add the record to</param>
+    /// <returns>SQL Query string with the parameters @shipmentId, @sku and @quantity</returns>
+    public string CreateShipmentLineInsertQuery(string schema, string table) =>
+        $"INSERT INTO {schema}.{table} (shipmentId, sku, quantity) VALUES (@shipmentId, @sku, @quantity)";
 }
