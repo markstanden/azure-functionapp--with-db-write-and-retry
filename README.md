@@ -26,3 +26,19 @@ I've assumed that sanitation of input is required, although not explicitly reque
 The retry logic waits in function, as suggested by the infrastructure diagram, as opposed to overcomplicating the functionapp by rescheduling a message back into the queue.
 - I have implemented my own recursive retry method
 - I could have used [Polly](https://www.pollydocs.org/) for out of the box retry (and in fact did in a past version), but I felt I could demonstrate both unit-testing and coding skill by writing my own.
+
+### Unit Testing
+
+I have unit tested using xUnit as a test framework and Moq for class isolation and mocking.
+
+I favour test isolation using interfaces.
+
+I did have some trouble with closed classes, which I have wrapped with interfaces to allow mocks to be created.
+
+I have conducted non-exhaustive unit testing as part of the development, and conducted development for the Retry and Sanitation classes using TDD.
+Although not part of the requirements for the challenge, I feel it illustrates a key part of my workflow.
+
+### Webhook Http Request
+
+- The functionApp makes a GET request to [webhook.site](https://webhook.site/#!/view/5b83a7db-90e0-4ae8-ab49-a5df2474665f/9514a315-20c0-42cb-9e2b-7be2c3355277/1) on success
+- In testing I hit the limit a few times to I have moved the webhook url into configuration to allow this to be changed without a redeploy.
