@@ -39,6 +39,21 @@ public class SqlDbService : ISqlDbService
     /// <returns></returns>
     public async Task<IRetryable> WriteNotificationAsync(ShipmentNotification notification)
     {
+        // It should not be possible to trigger these guards as we are already checking
+        // within the caller, but is good practice in case the implementation changes.
+        if (notification is null || notification.shipmentLines is null)
+        {
+            throw new ArgumentNullException(nameof(notification));
+        }
+
+        // Check now that there is at least one item in the shipping lines array.
+        if (notification.shipmentLines.Length < 1)
+        {
+            const string error = "Shipping Notification lines is empty.";
+            _logger.LogWarning($"Aborting DB Write - {error}");
+            throw new ArgumentException(error, nameof(notification));
+        }
+
         var sanitisedShipmentId = _sanitation.AlphaNumericsWithSpecialCharacters(
             notification.shipmentId,
             ['-']
@@ -50,6 +65,8 @@ public class SqlDbService : ISqlDbService
 
         try
         {
+            // await using here will dispose of the connection once
+            // the thread leaves the _parent scope_ (and await async completion).
             await using var connection = _connector.GetConnection();
             await connection.OpenAsync();
 
@@ -80,7 +97,9 @@ public class SqlDbService : ISqlDbService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Failed to write to DB: {ex.Message}");
+            _logger.LogError(
+                $"Failed to establish connection to DB:\nMessage: {ex.Message}\nError: {ex.Data}"
+            );
             return new Retryable { success = false, message = ex.Message };
         }
     }
