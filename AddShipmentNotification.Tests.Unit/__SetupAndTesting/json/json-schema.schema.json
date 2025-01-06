@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "",
+  "$id": "AddShipmentNotification",
   "title": "AddShipmentNotification",
   "description": "Adds a shipment notification receipt",
   "type": "object",
@@ -10,8 +10,10 @@
       "type": "string"
     },
     "shipmentDate": {
-      "description": "Date of the shipment notification",
-      "type": "string"
+      "description": "Date of the shipment notification in ISO 8601 format",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
     },
     "shipmentLines": {
       "description": "The product lines within the shipment",
@@ -23,16 +25,22 @@
             "description": "The unique ID for the product",
             "type": "string"
           },
-          "quantity" : {
+          "quantity": {
             "description": "The quantity of the product in the shipment",
             "type": "integer",
             "exclusiveMinimum": 0
           }
         },
-        "required": [ "sku", "quantity" ]
+        "required": [
+          "sku",
+          "quantity"
+        ]
       }
     }
   },
-  "required": [ "shipmentId", "shipmentDate", "shipmentLines" ]
+  "required": [
+    "shipmentId",
+    "shipmentDate",
+    "shipmentLines"
+  ]
 }
-
