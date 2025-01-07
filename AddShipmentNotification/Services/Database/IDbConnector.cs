@@ -1,6 +1,6 @@
 using System.Data.Common;
 
-namespace interview.SqlDbService;
+namespace interview.Services.Database;
 
 /// <summary>
 /// Interface allows for dependency injection of connection,

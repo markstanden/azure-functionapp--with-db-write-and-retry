@@ -1,7 +1,7 @@
 using interview.Models.Domain;
 using interview.Retry;
 
-namespace interview.SqlDbService;
+namespace interview.Services.Database;
 
 public interface ISqlDbService
 {

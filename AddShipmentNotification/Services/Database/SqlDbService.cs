@@ -2,9 +2,10 @@ using System.Data.Common;
 using interview.Models.Domain;
 using interview.Retry;
 using interview.Sanitation;
-using interview.SqlDbService;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+
+namespace interview.Services.Database;
 
 public class SqlDbService : ISqlDbService
 {
@@ -133,17 +134,17 @@ public class SqlDbService : ISqlDbService
     )
     {
         return await shipmentLines
-        // We can't use a Task.WhenAll(shipmentLineTasks).Sum() as the connection cannot handle
-        // multiple concurrent async requests, so we must add the lines synchronously.  The reducer below
-        // awaits the result of each addition before starting the next DB request.
-        .Aggregate(
-            // Accumulator init is first param
-            Task.FromResult(0),
-            // reducer is second param
-            async (affectedLineAcc, shipmentLine) =>
-                await affectedLineAcc
-                + await WriteShipmentLineAsync(connection, sanitisedShipmentId, shipmentLine)
-        );
+            // We can't use a Task.WhenAll(shipmentLineTasks).Sum() as the connection cannot handle
+            // multiple concurrent async requests, so we must add the lines synchronously.  The reducer below
+            // awaits the result of each addition before starting the next DB request.
+            .Aggregate(
+                // Accumulator init is first param
+                Task.FromResult(0),
+                // reducer is second param
+                async (affectedLineAcc, shipmentLine) =>
+                    await affectedLineAcc
+                    + await WriteShipmentLineAsync(connection, sanitisedShipmentId, shipmentLine)
+            );
     }
 
     /// <summary>
