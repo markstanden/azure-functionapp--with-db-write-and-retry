@@ -1,4 +1,4 @@
-namespace interview.WebhookService;
+namespace interview.Services.Webhook;
 
 public interface IWebhookService
 {

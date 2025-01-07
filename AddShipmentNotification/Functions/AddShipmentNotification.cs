@@ -3,7 +3,7 @@ using Azure.Messaging.ServiceBus;
 using interview.Models.Domain;
 using interview.Sanitation;
 using interview.Services.Database;
-using interview.WebhookService;
+using interview.Services.Webhook;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 

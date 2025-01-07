@@ -1,7 +1,7 @@
 using interview.HttpClientWrapper;
 using Microsoft.Extensions.Logging;
 
-namespace interview.WebhookService;
+namespace interview.Services.Webhook;
 
 public class WebhookService : IWebhookService
 {

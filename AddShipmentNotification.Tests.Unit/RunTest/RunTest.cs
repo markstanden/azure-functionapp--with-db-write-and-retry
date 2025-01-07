@@ -4,7 +4,7 @@ using interview.Models.Domain;
 using interview.Retry;
 using interview.Sanitation;
 using interview.Services.Database;
-using interview.WebhookService;
+using interview.Services.Webhook;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Moq;
