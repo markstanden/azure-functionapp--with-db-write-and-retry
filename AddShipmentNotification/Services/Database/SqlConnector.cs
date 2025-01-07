@@ -1,7 +1,7 @@
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 
-namespace interview.Services.Database;
+namespace AddShipmentNotification.Services.Database;
 
 public class SqlConnector : IDbConnector
 {

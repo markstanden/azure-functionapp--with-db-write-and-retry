@@ -1,4 +1,4 @@
-namespace interview.Infrastructure.Http;
+namespace AddShipmentNotification.Infrastructure.Http;
 
 public class HttpClientWrapper : IHttpClientWrapper
 {

@@ -1,21 +1,27 @@
 using System.Text.Json;
+using AddShipmentNotification.Models.Domain;
+using AddShipmentNotification.Services.Database;
+using AddShipmentNotification.Services.Retry;
+using AddShipmentNotification.Services.Validation;
+using AddShipmentNotification.Services.Webhook;
 using AddShipmentNotification.Tests.Unit.TestHelpers;
 using Azure.Messaging.ServiceBus;
-using interview.Models.Domain;
-using interview.Services.Database;
-using interview.Services.Retry;
-using interview.Services.Validation;
-using interview.Services.Webhook;
+using JetBrains.Annotations;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AddShipmentNotification.Tests.Unit.Functions;
 
+[TestSubject(typeof(AddShipmentNotification.Functions.AddShipmentNotification))]
 public class AddShipmentNotificationTests
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
-    private readonly Mock<ILogger<interview.Functions.AddShipmentNotification>> _mockLog;
+
+    private readonly Mock<
+        ILogger<AddShipmentNotification.Functions.AddShipmentNotification>
+    > _mockLog;
+
     private readonly Mock<ISqlDbService> _mockSqlDbService;
     private readonly Mock<IWebhookService> _mockWebhookService;
     private readonly IRetryService _testRetryService;
@@ -23,7 +29,7 @@ public class AddShipmentNotificationTests
 
     public AddShipmentNotificationTests()
     {
-        _mockLog = new Mock<ILogger<interview.Functions.AddShipmentNotification>>();
+        _mockLog = new Mock<ILogger<AddShipmentNotification.Functions.AddShipmentNotification>>();
         _testRetryService = new RetryService() { DelaySeconds = 0 };
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
@@ -57,7 +63,7 @@ public class AddShipmentNotificationTests
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
         // Act - trigger the system under test with the arranged variables
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -83,7 +89,7 @@ public class AddShipmentNotificationTests
         var testJson = JsonTestData.CreateJson();
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -125,7 +131,7 @@ public class AddShipmentNotificationTests
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -171,7 +177,7 @@ public class AddShipmentNotificationTests
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -214,7 +220,7 @@ public class AddShipmentNotificationTests
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -249,7 +255,7 @@ public class AddShipmentNotificationTests
         );
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -282,7 +288,7 @@ public class AddShipmentNotificationTests
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
         DbWriteSuccess(false);
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -297,7 +303,11 @@ public class AddShipmentNotificationTests
                     It.Is<ServiceBusReceivedMessage>(message => message == stubMessage),
                     It.IsAny<Dictionary<string, object>>(),
                     It.Is<string>(message =>
-                        message == interview.Functions.AddShipmentNotification.DatabaseWriteError
+                        message
+                        == AddShipmentNotification
+                            .Functions
+                            .AddShipmentNotification
+                            .DatabaseWriteError
                     ),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
@@ -329,7 +339,7 @@ public class AddShipmentNotificationTests
         DbWriteSuccess(false);
         WebhookServiceSetup();
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -367,7 +377,7 @@ public class AddShipmentNotificationTests
         DbWriteSuccess(true);
         WebhookServiceSetup();
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,
@@ -405,7 +415,7 @@ public class AddShipmentNotificationTests
         DbWriteSuccess(true);
         WebhookServiceSetup();
 
-        var sut = new interview.Functions.AddShipmentNotification(
+        var sut = new AddShipmentNotification.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetryService,
             _testSanitation,

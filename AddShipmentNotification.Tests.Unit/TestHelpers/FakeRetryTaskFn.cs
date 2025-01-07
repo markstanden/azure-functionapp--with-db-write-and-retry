@@ -1,4 +1,4 @@
-using interview.Services.Retry;
+using AddShipmentNotification.Services.Retry;
 
 namespace AddShipmentNotification.Tests.Unit.TestHelpers;
 

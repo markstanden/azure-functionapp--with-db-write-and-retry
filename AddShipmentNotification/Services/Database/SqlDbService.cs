@@ -1,11 +1,11 @@
 using System.Data.Common;
-using interview.Models.Domain;
-using interview.Services.Retry;
-using interview.Services.Validation;
+using AddShipmentNotification.Models.Domain;
+using AddShipmentNotification.Services.Retry;
+using AddShipmentNotification.Services.Validation;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 
-namespace interview.Services.Database;
+namespace AddShipmentNotification.Services.Database;
 
 public class SqlDbService : ISqlDbService
 {

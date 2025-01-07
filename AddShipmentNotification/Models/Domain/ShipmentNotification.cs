@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace interview.Models.Domain
+namespace AddShipmentNotification.Models.Domain
 {
     /// <summary>
     /// Class <c>ShipmentNotification</c> models a shipment notification

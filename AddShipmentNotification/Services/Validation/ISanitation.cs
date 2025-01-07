@@ -1,4 +1,4 @@
-namespace interview.Services.Validation;
+namespace AddShipmentNotification.Services.Validation;
 
 public interface ISanitation
 {

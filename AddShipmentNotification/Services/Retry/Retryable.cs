@@ -1,4 +1,4 @@
-namespace interview.Services.Retry;
+namespace AddShipmentNotification.Services.Retry;
 
 public record Retryable : IRetryable
 {

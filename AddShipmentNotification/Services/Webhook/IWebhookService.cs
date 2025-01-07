@@ -1,4 +1,4 @@
-namespace interview.Services.Webhook;
+namespace AddShipmentNotification.Services.Webhook;
 
 public interface IWebhookService
 {

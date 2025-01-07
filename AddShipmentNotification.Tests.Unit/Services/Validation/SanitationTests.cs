@@ -1,4 +1,4 @@
-using interview.Services.Validation;
+using AddShipmentNotification.Services.Validation;
 using JetBrains.Annotations;
 
 namespace AddShipmentNotification.Tests.Unit.Services.Validation;

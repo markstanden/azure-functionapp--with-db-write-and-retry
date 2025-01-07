@@ -1,6 +1,6 @@
 using System.Data.Common;
 
-namespace interview.Services.Database;
+namespace AddShipmentNotification.Services.Database;
 
 /// <summary>
 /// Interface allows for dependency injection of connection,

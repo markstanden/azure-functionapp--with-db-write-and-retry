@@ -1,5 +1,5 @@
+using AddShipmentNotification.Services.Retry;
 using AddShipmentNotification.Tests.Unit.TestHelpers;
-using interview.Services.Retry;
 using JetBrains.Annotations;
 using Moq;
 

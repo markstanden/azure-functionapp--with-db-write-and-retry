@@ -1,7 +1,7 @@
-using interview.Models.Domain;
-using interview.Services.Retry;
+using AddShipmentNotification.Models.Domain;
+using AddShipmentNotification.Services.Retry;
 
-namespace interview.Services.Database;
+namespace AddShipmentNotification.Services.Database;
 
 public interface ISqlDbService
 {

@@ -1,7 +1,7 @@
-using interview.Infrastructure.Http;
+using AddShipmentNotification.Infrastructure.Http;
 using Microsoft.Extensions.Logging;
 
-namespace interview.Services.Webhook;
+namespace AddShipmentNotification.Services.Webhook;
 
 public class WebhookService : IWebhookService
 {

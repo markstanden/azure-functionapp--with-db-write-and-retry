@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace interview.Models.Domain
+namespace AddShipmentNotification.Models.Domain
 {
     /// <summary>
     /// Class <c>ShipmentLine</c> describes individual lines within the

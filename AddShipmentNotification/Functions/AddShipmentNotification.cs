@@ -1,14 +1,14 @@
 using System.Text.Json;
+using AddShipmentNotification.Models.Domain;
+using AddShipmentNotification.Services.Database;
+using AddShipmentNotification.Services.Retry;
+using AddShipmentNotification.Services.Validation;
+using AddShipmentNotification.Services.Webhook;
 using Azure.Messaging.ServiceBus;
-using interview.Models.Domain;
-using interview.Services.Database;
-using interview.Services.Retry;
-using interview.Services.Validation;
-using interview.Services.Webhook;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace interview.Functions
+namespace AddShipmentNotification.Functions
 {
     public class AddShipmentNotification
     {

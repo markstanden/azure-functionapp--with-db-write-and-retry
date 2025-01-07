@@ -1,8 +1,8 @@
-using interview.Infrastructure.Http;
-using interview.Services.Database;
-using interview.Services.Retry;
-using interview.Services.Validation;
-using interview.Services.Webhook;
+using AddShipmentNotification.Infrastructure.Http;
+using AddShipmentNotification.Services.Database;
+using AddShipmentNotification.Services.Retry;
+using AddShipmentNotification.Services.Validation;
+using AddShipmentNotification.Services.Webhook;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
