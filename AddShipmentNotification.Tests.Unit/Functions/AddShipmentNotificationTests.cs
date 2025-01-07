@@ -1,4 +1,5 @@
 using System.Text.Json;
+using AddShipmentNotification.Tests.Unit.TestHelpers;
 using Azure.Messaging.ServiceBus;
 using interview.Models.Domain;
 using interview.Services.Database;
@@ -9,9 +10,9 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace AddShipmentNotification.Tests.Unit.RunTest;
+namespace AddShipmentNotification.Tests.Unit.Functions;
 
-public class RunTest
+public class AddShipmentNotificationTests
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
     private readonly Mock<ILogger<interview.Functions.AddShipmentNotification>> _mockLog;
@@ -20,7 +21,7 @@ public class RunTest
     private readonly IRetryService _testRetryService;
     private readonly ISanitation _testSanitation;
 
-    public RunTest()
+    public AddShipmentNotificationTests()
     {
         _mockLog = new Mock<ILogger<interview.Functions.AddShipmentNotification>>();
         _testRetryService = new RetryService() { DelaySeconds = 0 };

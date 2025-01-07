@@ -1,12 +1,12 @@
-using AddShipmentNotification.Tests.Unit.FakeRetryFn;
+using AddShipmentNotification.Tests.Unit.TestHelpers;
 using interview.Services.Retry;
 using JetBrains.Annotations;
 using Moq;
 
-namespace AddShipmentNotification.Tests.Unit.RetryTest;
+namespace AddShipmentNotification.Tests.Unit.Services.Retry;
 
 [TestSubject(typeof(RetryService))]
-public class RetryServiceTest
+public class RetryServiceTests
 {
     private const int FirstAttempt = 1;
     private const int SecondAttempt = 2;

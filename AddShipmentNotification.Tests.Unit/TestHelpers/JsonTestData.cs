@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace AddShipmentNotification.Tests.Unit.RunTest;
+namespace AddShipmentNotification.Tests.Unit.TestHelpers;
 
 public class JsonTestData
 {

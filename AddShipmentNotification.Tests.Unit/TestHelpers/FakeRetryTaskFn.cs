@@ -1,6 +1,6 @@
 using interview.Services.Retry;
 
-namespace AddShipmentNotification.Tests.Unit.FakeRetryFn;
+namespace AddShipmentNotification.Tests.Unit.TestHelpers;
 
 /// <summary>
 /// Factory class producing a Fake retryable function.

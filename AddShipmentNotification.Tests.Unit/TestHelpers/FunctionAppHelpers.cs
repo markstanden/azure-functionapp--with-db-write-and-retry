@@ -1,5 +1,7 @@
 using Azure.Messaging.ServiceBus;
 
+namespace AddShipmentNotification.Tests.Unit.TestHelpers;
+
 /// <summary>
 /// Static helper methods to help test functionapps
 /// </summary>

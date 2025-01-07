@@ -26,4 +26,9 @@
     <ProjectReference Include="..\AddShipmentNotification\AddShipmentNotification.csproj"/>
   </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="RunTest\"/>
+        <Folder Include="SanitationTest\"/>
+    </ItemGroup>
+
 </Project>

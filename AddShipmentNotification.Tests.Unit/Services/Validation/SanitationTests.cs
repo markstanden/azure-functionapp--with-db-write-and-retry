@@ -1,10 +1,10 @@
 using interview.Services.Validation;
 using JetBrains.Annotations;
 
-namespace AddShipmentNotification.Tests.Unit.SanitationTest;
+namespace AddShipmentNotification.Tests.Unit.Services.Validation;
 
 [TestSubject(typeof(Sanitation))]
-public class SanitationTest
+public class SanitationTests
 {
     [Fact]
     public void SanitationAlphaNumericsOnly_WithMixedAlphaNumericSpecialArgument_RemovesNonAlphaNumericCharacters()
