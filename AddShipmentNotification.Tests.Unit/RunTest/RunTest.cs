@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using interview.Models.Domain;
-using interview.Retry;
 using interview.Sanitation;
 using interview.Services.Database;
+using interview.Services.Retry;
 using interview.Services.Webhook;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -17,13 +17,13 @@ public class RunTest
     private readonly Mock<ILogger<interview.Functions.AddShipmentNotification>> _mockLog;
     private readonly Mock<ISqlDbService> _mockSqlDbService;
     private readonly Mock<IWebhookService> _mockWebhookService;
-    private readonly IRetry _testRetry;
+    private readonly IRetryService _testRetryService;
     private readonly ISanitation _testSanitation;
 
     public RunTest()
     {
         _mockLog = new Mock<ILogger<interview.Functions.AddShipmentNotification>>();
-        _testRetry = new Retry() { DelaySeconds = 0 };
+        _testRetryService = new RetryService() { DelaySeconds = 0 };
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
         _mockActions = new Mock<ServiceBusMessageActions>();
@@ -58,7 +58,7 @@ public class RunTest
         // Act - trigger the system under test with the arranged variables
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -84,7 +84,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -126,7 +126,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -172,7 +172,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -215,7 +215,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -250,7 +250,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -283,7 +283,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -330,7 +330,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -368,7 +368,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object
@@ -406,7 +406,7 @@ public class RunTest
 
         var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
-            _testRetry,
+            _testRetryService,
             _testSanitation,
             _mockSqlDbService.Object,
             _mockWebhookService.Object

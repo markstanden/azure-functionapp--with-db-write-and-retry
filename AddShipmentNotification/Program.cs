@@ -1,7 +1,7 @@
-using interview.HttpClientWrapper;
-using interview.Retry;
+using interview.Infrastructure.Http;
 using interview.Sanitation;
 using interview.Services.Database;
+using interview.Services.Retry;
 using interview.Services.Webhook;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +18,7 @@ builder.ConfigureFunctionsWebApplication();
 //     .AddApplicationInsightsTelemetryWorkerService()
 //     .ConfigureFunctionsApplicationInsights();
 
-builder.Services.AddSingleton<IRetry, Retry>();
+builder.Services.AddSingleton<IRetryService, RetryService>();
 builder.Services.AddSingleton<ISanitation, Sanitation>();
 
 // Adds Http Client as a DI Constructor parameter to be injected into HttpClientWrapper

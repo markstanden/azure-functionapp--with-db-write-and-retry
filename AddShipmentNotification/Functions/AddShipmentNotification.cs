@@ -3,6 +3,7 @@ using Azure.Messaging.ServiceBus;
 using interview.Models.Domain;
 using interview.Sanitation;
 using interview.Services.Database;
+using interview.Services.Retry;
 using interview.Services.Webhook;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,7 @@ namespace interview.Functions
         public const string DatabaseWriteSuccess = "Successfully added shipment notification";
 
         private readonly ILogger<AddShipmentNotification> _logger;
-        private readonly IRetry _retryFn;
+        private readonly IRetryService _retryServiceFn;
         private readonly ISanitation _sanitation;
         private readonly ISqlDbService _sqlDbService;
 
@@ -29,20 +30,20 @@ namespace interview.Functions
         /// Function constructor, used for Dependency Injection
         /// </summary>
         /// <param name="logger"></param>
-        /// <param name="retryFn"></param>
+        /// <param name="retryServiceFn"></param>
         /// <param name="sanitation"></param>
         /// <param name="sqlDbService"></param>
         /// <param name="webhookService"></param>
         public AddShipmentNotification(
             ILogger<AddShipmentNotification> logger,
-            IRetry retryFn,
+            IRetryService retryServiceFn,
             ISanitation sanitation,
             ISqlDbService sqlDbService,
             IWebhookService webhookService
         )
         {
             _logger = logger;
-            _retryFn = retryFn;
+            _retryServiceFn = retryServiceFn;
             _sanitation = sanitation;
             _sqlDbService = sqlDbService;
             _webhookService = webhookService;
@@ -72,7 +73,7 @@ namespace interview.Functions
             // Call the retry function and pass the method to add the notification to the DB to it
             // The retry function attempts to do the write 3 times (by default) with a 10 second delay between attempts (default)
             // returns true if successful, false if unsuccessful
-            var dbWriteResult = await _retryFn.Attempt(
+            var dbWriteResult = await _retryServiceFn.Attempt(
                 () => _sqlDbService.WriteNotificationAsync(notification)
             );
 

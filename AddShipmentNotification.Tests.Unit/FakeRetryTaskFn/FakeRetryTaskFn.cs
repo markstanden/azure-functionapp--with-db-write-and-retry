@@ -1,4 +1,4 @@
-using interview.Retry;
+using interview.Services.Retry;
 
 namespace AddShipmentNotification.Tests.Unit.FakeRetryFn;
 

@@ -1,4 +1,4 @@
-using interview.HttpClientWrapper;
+using interview.Infrastructure.Http;
 using Microsoft.Extensions.Logging;
 
 namespace interview.Services.Webhook;

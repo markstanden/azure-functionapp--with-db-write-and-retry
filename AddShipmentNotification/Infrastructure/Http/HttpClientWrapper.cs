@@ -1,4 +1,4 @@
-namespace interview.HttpClientWrapper;
+namespace interview.Infrastructure.Http;
 
 public class HttpClientWrapper : IHttpClientWrapper
 {

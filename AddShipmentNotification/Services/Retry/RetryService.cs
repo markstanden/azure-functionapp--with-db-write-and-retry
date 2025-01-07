@@ -1,6 +1,6 @@
-namespace interview.Retry;
+namespace interview.Services.Retry;
 
-public class Retry : IRetry
+public class RetryService : IRetryService
 {
     public int DelaySeconds { get; init; } = 10;
 

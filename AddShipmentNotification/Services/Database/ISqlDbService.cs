@@ -1,5 +1,5 @@
 using interview.Models.Domain;
-using interview.Retry;
+using interview.Services.Retry;
 
 namespace interview.Services.Database;
 

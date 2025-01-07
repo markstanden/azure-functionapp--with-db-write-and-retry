@@ -1,12 +1,12 @@
 using AddShipmentNotification.Tests.Unit.FakeRetryFn;
-using interview.Retry;
+using interview.Services.Retry;
 using JetBrains.Annotations;
 using Moq;
 
 namespace AddShipmentNotification.Tests.Unit.RetryTest;
 
-[TestSubject(typeof(Retry))]
-public class RetryTest
+[TestSubject(typeof(RetryService))]
+public class RetryServiceTest
 {
     private const int FirstAttempt = 1;
     private const int SecondAttempt = 2;
@@ -14,8 +14,8 @@ public class RetryTest
     private const int FourthAttempt = 4;
 
     // Convenience delegate to reduce boilerplate within tests
-    private readonly Func<int, IRetry> _instantRetry = (attempts) =>
-        new Retry { MaxRetries = attempts, DelaySeconds = 0 };
+    private readonly Func<int, IRetryService> _instantRetry = (attempts) =>
+        new RetryService { MaxRetries = attempts, DelaySeconds = 0 };
 
     private Mock<Func<TimeSpan, Task>> CreateMockDelayFn()
     {
@@ -26,9 +26,9 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningTrue_LoopsOnceReturnsTrue()
     {
         var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FirstAttempt);
-        IRetry retry = _instantRetry(3);
+        IRetryService retryService = _instantRetry(3);
 
-        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
+        var result = await retryService.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(1, fakeRetryTaskFn.ExecutionCount);
         Assert.True(result.success);
@@ -38,9 +38,9 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningFalseTrue_LoopsTwiceReturnsTrue()
     {
         var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(SecondAttempt);
-        IRetry retry = _instantRetry(3);
+        IRetryService retryService = _instantRetry(3);
 
-        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
+        var result = await retryService.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(2, fakeRetryTaskFn.ExecutionCount);
         Assert.True(result.success);
@@ -50,9 +50,9 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningFalseFalseTrue_LoopsThreeTimesReturnsTrue()
     {
         var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(ThirdAttempt);
-        IRetry retry = _instantRetry(3);
+        IRetryService retryService = _instantRetry(3);
 
-        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
+        var result = await retryService.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(3, fakeRetryTaskFn.ExecutionCount);
         Assert.True(result.success);
@@ -62,9 +62,9 @@ public class RetryTest
     public async Task Attempt_WithFunctionReturningFalseFalseFalse_LoopsThreeTimesReturnsFalse()
     {
         var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(FourthAttempt);
-        IRetry retry = _instantRetry(3);
+        IRetryService retryService = _instantRetry(3);
 
-        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
+        var result = await retryService.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(3, fakeRetryTaskFn.ExecutionCount);
         Assert.False(result.success);
@@ -74,9 +74,9 @@ public class RetryTest
     public async Task Attempt_WithTwoMaxRetries_LoopsTwiceReturnsFalse()
     {
         var fakeRetryTaskFn = FakeRetryTaskFn.CreateSuccessOn(ThirdAttempt);
-        IRetry retry = _instantRetry(2);
+        IRetryService retryService = _instantRetry(2);
 
-        var result = await retry.Attempt(fakeRetryTaskFn.RetryTask);
+        var result = await retryService.Attempt(fakeRetryTaskFn.RetryTask);
 
         Assert.Equal(2, fakeRetryTaskFn.ExecutionCount);
         Assert.False(result.success);
@@ -87,14 +87,14 @@ public class RetryTest
     {
         var delayFnMock = CreateMockDelayFn();
         var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(FirstAttempt);
-        IRetry retry = new Retry()
+        IRetryService retryService = new RetryService()
         {
             MaxRetries = 3,
             DelaySeconds = 0,
             DelayFn = delayFnMock.Object,
         };
 
-        await retry.Attempt(fakeRetryFn.RetryTask);
+        await retryService.Attempt(fakeRetryFn.RetryTask);
 
         delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(0));
     }
@@ -104,14 +104,14 @@ public class RetryTest
     {
         var delayFnMock = CreateMockDelayFn();
         var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(SecondAttempt);
-        IRetry retry = new Retry()
+        IRetryService retryService = new RetryService()
         {
             MaxRetries = 3,
             DelaySeconds = 0,
             DelayFn = delayFnMock.Object,
         };
 
-        await retry.Attempt(fakeRetryFn.RetryTask);
+        await retryService.Attempt(fakeRetryFn.RetryTask);
 
         delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(1));
     }
@@ -121,14 +121,14 @@ public class RetryTest
     {
         var delayFnMock = CreateMockDelayFn();
         var fakeRetryFn = FakeRetryTaskFn.CreateSuccessOn(ThirdAttempt);
-        IRetry retry = new Retry()
+        IRetryService retryService = new RetryService()
         {
             MaxRetries = 3,
             DelaySeconds = 0,
             DelayFn = delayFnMock.Object,
         };
 
-        await retry.Attempt(fakeRetryFn.RetryTask);
+        await retryService.Attempt(fakeRetryFn.RetryTask);
 
         delayFnMock.Verify(x => x(TimeSpan.FromSeconds(0)), Times.Exactly(2));
     }

@@ -1,6 +1,6 @@
-using interview.Retry;
+namespace interview.Services.Retry;
 
-public interface IRetry
+public interface IRetryService
 {
     int MaxRetries { get; init; }
     Task<IRetryable> Attempt(Func<Task<IRetryable>> fnAsync, int attempt = 1);

@@ -1,4 +1,4 @@
-namespace interview.Retry;
+namespace interview.Services.Retry;
 
 public record Retryable : IRetryable
 {
