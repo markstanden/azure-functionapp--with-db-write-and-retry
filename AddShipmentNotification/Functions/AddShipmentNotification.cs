@@ -6,7 +6,7 @@ using interview.WebhookService;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace interview
+namespace interview.Functions
 {
     public class AddShipmentNotification
     {

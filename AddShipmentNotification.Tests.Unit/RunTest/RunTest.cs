@@ -14,7 +14,7 @@ namespace AddShipmentNotification.Tests.Unit.RunTest;
 public class RunTest
 {
     private readonly Mock<ServiceBusMessageActions> _mockActions;
-    private readonly Mock<ILogger<interview.AddShipmentNotification>> _mockLog;
+    private readonly Mock<ILogger<interview.Functions.AddShipmentNotification>> _mockLog;
     private readonly Mock<ISqlDbService> _mockSqlDbService;
     private readonly Mock<IWebhookService> _mockWebhookService;
     private readonly IRetry _testRetry;
@@ -22,7 +22,7 @@ public class RunTest
 
     public RunTest()
     {
-        _mockLog = new Mock<ILogger<interview.AddShipmentNotification>>();
+        _mockLog = new Mock<ILogger<interview.Functions.AddShipmentNotification>>();
         _testRetry = new Retry() { DelaySeconds = 0 };
         _testSanitation = new Sanitation();
         _mockSqlDbService = new Mock<ISqlDbService>();
@@ -56,7 +56,7 @@ public class RunTest
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
         // Act - trigger the system under test with the arranged variables
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -82,7 +82,7 @@ public class RunTest
         var testJson = JsonTestData.CreateJson();
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -124,7 +124,7 @@ public class RunTest
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -170,7 +170,7 @@ public class RunTest
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -213,7 +213,7 @@ public class RunTest
         var json = JsonSerializer.Serialize(testData);
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(json);
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -248,7 +248,7 @@ public class RunTest
         );
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -281,7 +281,7 @@ public class RunTest
         var stubMessage = FunctionAppHelpers.CreateServiceBusReceivedMessage(testJson);
         DbWriteSuccess(false);
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -296,7 +296,7 @@ public class RunTest
                     It.Is<ServiceBusReceivedMessage>(message => message == stubMessage),
                     It.IsAny<Dictionary<string, object>>(),
                     It.Is<string>(message =>
-                        message == interview.AddShipmentNotification.DatabaseWriteError
+                        message == interview.Functions.AddShipmentNotification.DatabaseWriteError
                     ),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
@@ -328,7 +328,7 @@ public class RunTest
         DbWriteSuccess(false);
         WebhookServiceSetup();
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -366,7 +366,7 @@ public class RunTest
         DbWriteSuccess(true);
         WebhookServiceSetup();
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
@@ -404,7 +404,7 @@ public class RunTest
         DbWriteSuccess(true);
         WebhookServiceSetup();
 
-        var sut = new interview.AddShipmentNotification(
+        var sut = new interview.Functions.AddShipmentNotification(
             _mockLog.Object,
             _testRetry,
             _testSanitation,
