@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using interview;
+using interview.Models.Domain;
 using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;

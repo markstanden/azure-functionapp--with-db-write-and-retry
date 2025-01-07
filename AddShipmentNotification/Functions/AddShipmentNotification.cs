@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using interview.Models.Domain;
 using interview.Sanitation;
 using interview.SqlDbService;
 using interview.WebhookService;

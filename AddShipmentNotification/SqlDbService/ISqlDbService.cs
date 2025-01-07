@@ -1,3 +1,4 @@
+using interview.Models.Domain;
 using interview.Retry;
 
 namespace interview.SqlDbService;

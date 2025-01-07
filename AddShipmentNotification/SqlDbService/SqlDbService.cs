@@ -1,5 +1,5 @@
 using System.Data.Common;
-using interview;
+using interview.Models.Domain;
 using interview.Retry;
 using interview.Sanitation;
 using interview.SqlDbService;

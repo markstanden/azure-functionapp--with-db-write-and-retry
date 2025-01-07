@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace interview
+namespace interview.Models.Domain
 {
     /// <summary>
     /// Class <c>ShipmentLine</c> describes individual lines within the
