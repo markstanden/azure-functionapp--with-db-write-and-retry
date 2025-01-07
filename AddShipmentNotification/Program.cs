@@ -1,8 +1,8 @@
-using interview.HttpClientWrapper;
-using interview.Retry;
-using interview.Sanitation;
-using interview.SqlDbService;
-using interview.WebhookService;
+using AddShipmentNotification.Infrastructure.Http;
+using AddShipmentNotification.Services.Database;
+using AddShipmentNotification.Services.Retry;
+using AddShipmentNotification.Services.Validation;
+using AddShipmentNotification.Services.Webhook;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +18,7 @@ builder.ConfigureFunctionsWebApplication();
 //     .AddApplicationInsightsTelemetryWorkerService()
 //     .ConfigureFunctionsApplicationInsights();
 
-builder.Services.AddSingleton<IRetry, Retry>();
+builder.Services.AddSingleton<IRetryService, RetryService>();
 builder.Services.AddSingleton<ISanitation, Sanitation>();
 
 // Adds Http Client as a DI Constructor parameter to be injected into HttpClientWrapper

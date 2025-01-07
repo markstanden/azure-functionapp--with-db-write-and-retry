@@ -41,4 +41,4 @@ Although not part of the requirements for the challenge, I feel it illustrates a
 ### Webhook Http Request
 
 - The functionApp makes a GET request to [webhook.site](https://webhook.site/#!/view/5b83a7db-90e0-4ae8-ab49-a5df2474665f/9514a315-20c0-42cb-9e2b-7be2c3355277/1) on success
-- In testing I hit the limit a few times to I have moved the webhook url into configuration to allow this to be changed without a redeploy.
+- When testing I hit the limit a few times to I have moved the webhook url into configuration to allow this to be changed without a re-deployment.
