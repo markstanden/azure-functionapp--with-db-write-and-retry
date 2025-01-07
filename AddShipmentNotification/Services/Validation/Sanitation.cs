@@ -1,4 +1,4 @@
-namespace interview.Sanitation;
+namespace interview.Services.Validation;
 
 public class Sanitation : ISanitation
 {

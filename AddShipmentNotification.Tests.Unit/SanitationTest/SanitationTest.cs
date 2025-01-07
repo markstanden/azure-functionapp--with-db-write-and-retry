@@ -1,4 +1,4 @@
-using interview.Sanitation;
+using interview.Services.Validation;
 using JetBrains.Annotations;
 
 namespace AddShipmentNotification.Tests.Unit.SanitationTest;
