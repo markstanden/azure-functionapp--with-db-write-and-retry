@@ -1,4 +1,26 @@
 # Coding Challenge
+# Coding Challenge - Azure FunctionApp
+
+## Development Setup
+
+### Prerequisites
+- .NET 8.0
+- CSharpier (Global Tool): `dotnet tool install -g csharpier`
+
+### Git Hooks
+This project uses Git hooks for automated code formatting. To set up:
+
+1. Ensure CSharpier is installed (see prerequisites)
+2. Configure Git to use the project hooks:
+   ```bash
+   git config core.hooksPath .hooks
+   ```
+
+The pre-commit hook will automatically format C# files using CSharpier before each commit.
+
+### Code Style
+- Code formatting is handled automatically by CSharpier
+- Configuration can be found in `.csharpierrc`
 
 ## Notes
 
