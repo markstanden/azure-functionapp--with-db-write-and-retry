@@ -1,4 +1,3 @@
-# Coding Challenge
 # Coding Challenge - Azure FunctionApp
 
 ## Development Setup
@@ -21,6 +20,21 @@ The pre-commit hook will automatically format C# files using CSharpier before ea
 ### Code Style
 - Code formatting is handled automatically by CSharpier
 - Configuration can be found in `.csharpierrc`
+
+## CI/CD Pipeline
+The project uses GitHub Actions workflows to enforce code quality:
+
+### Workflow Structure
+- **Code Quality**: Validates code formatting using CSharpier
+- **Compilation**: Ensures the solution builds successfully
+- **Code Coverage**: Runs tests and verifies 80% minimum test coverage
+
+### Key Features
+- Optimized with caching for faster builds
+- Automated checks on PRs to main branch
+- Workflows work independently
+- Manual triggers for development testing
+- Failed checks block PR merging
 
 ## Notes
 
