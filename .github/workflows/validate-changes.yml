@@ -1,0 +1,23 @@
+name: Validate Changes
+
+# Triggered when PRs to main branch are opened or updated, or manually from Actions tab
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  # Verify code meets quality standards
+  quality:
+    uses: ./.github/workflows/code-quality.yml
+
+  # Ensure code compiles successfully
+  compile:
+    needs: quality
+    uses: ./.github/workflows/compile.yml
+
+  # Verify test coverage meets standards
+  coverage:
+    needs: compile
+    uses: ./.github/workflows/code-coverage.yml

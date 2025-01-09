@@ -1,0 +1,50 @@
+name: Code Quality
+
+# A reusable workflow that other workflows in this repo can call
+# Makes the formatting and code quality checks consistent across all workflows
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: 'Directory to run format validation in'
+        required: false
+        type: string
+        default: '.'
+  workflow_dispatch:  # Allows manual runs from GitHub UI
+
+jobs:
+  formatting:
+    name: Validate Code Formatting
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checks out our code from the repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Sets up the right version of .NET - CSharpier needs this to run
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Tries to avoid installing CSharpier every time by keeping it in a cache
+      # The cache key includes the tools manifest so it updates if our tools change
+      - name: Cache dotnet tools
+        id: cache-dotnet-tools
+        uses: actions/cache@v4
+        with:
+          path: ~/.dotnet/tools
+          key: ${{ runner.os }}-dotnet-tools-${{ hashFiles('**/.config/dotnet-tools.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dotnet-tools-
+
+      # Only installs CSharpier if we didn't find it in the cache
+      - name: Install CSharpier
+        run: dotnet tool install -g csharpier
+        if: steps.cache-dotnet-tools.outputs.cache-hit != 'true'
+
+      # Runs CSharpier in validation mode
+      # will fail if any files aren't formatted as it expects
+      - name: Validate formatting
+        run: dotnet csharpier --check ${{ inputs.working-directory }}

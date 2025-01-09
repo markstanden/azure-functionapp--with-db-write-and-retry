@@ -1,0 +1,84 @@
+name: Code Coverage
+
+# Validates test coverage meets required standards
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    name: Verify Test Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout the code from the repo so we can work with it
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up .NET 8.0 on the runner so we can build and test .NET apps
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Cache NuGet packages for faster builds
+      - name: Cache NuGet packages
+        id: cache-nuget
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      # Log cache status
+      - name: Check cache status
+        run: |
+          if [ "${{ steps.cache-nuget.outputs.cache-hit }}" == 'true' ]; then
+            echo "🎯 Using cached NuGet packages"
+          else
+            echo "💨 Cache miss - downloading packages"
+          fi
+
+      # Restore NuGet packages and dependencies for the project.
+      # Ensures all the necessary packages are available for building the app.
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Run the unit tests with code coverage collection, but without rebuilding the project.
+      # Results are output to the `TestResults` directory.
+      - name: Run tests with coverage
+        run: dotnet test --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      # Install `xmllint`, a utility to parse XML files,
+      # specifically for the Cobertura coverage report.
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+
+      # Upload the code coverage report as an artifact so it can be viewed in GitHub Actions later.
+      # Useful for monitoring coverage trends over time.
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          # Name of the artifact to upload
+          name: code-coverage-report
+          # Path to the Cobertura XML file containing the coverage report
+          path: ./TestResults/*/coverage.cobertura.xml
+
+      # Parse the coverage report (in Cobertura format) to extract the code coverage percentage.
+      # If the coverage is below the specified threshold the build will fail.
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(xmllint --xpath "string(//coverage/@line-rate)" ./TestResults/*/coverage.cobertura.xml)
+          echo "Code coverage: $COVERAGE"
+          THRESHOLD=0.80
+          
+          # Pipe the condition into bc (a command line calculator)
+          # the -l flag uses floating point arithmetic.
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "Code coverage is below $THRESHOLD, failing the build."
+            exit 1
+          else
+            echo "Code coverage is above the threshold: $THRESHOLD."
+          fi
+        shell: bash
