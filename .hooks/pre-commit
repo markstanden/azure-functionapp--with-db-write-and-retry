@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Check if CSharpier is installed
+if ! command -v dotnet-csharpier &> /dev/null; then
+    echo "Error: CSharpier is not installed. Please install it with 'dotnet tool install -g csharpier'"
+    exit 1
+fi
+
+# Change to the repository root directory
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+echo "Running CSharpier on all C# files..."
+dotnet csharpier .
+
+# Get list of all formatted files
+formatted_files=$(git diff --name-only | grep "\.cs$" || true)
+
+if [ -n "$formatted_files" ]; then
+    echo "Adding formatted files to staging..."
+    git add $formatted_files
+fi
+
+# Return success
+exit 0
